@@ -1,4 +1,6 @@
 import os
+import json
+import ast
 from multiprocessing import Process, Queue
 from flask import Flask
 from flask import request, jsonify
@@ -7,7 +9,7 @@ from flask_restx import fields, Resource, Api, reqparse, marshal
 # from exodus import *
 # from job_manager import JobManager
 # from db_layer import NewPool, DBLayer
-from video import video
+from video import video as v
 import threading
 
 app = Flask(__name__)
@@ -16,9 +18,10 @@ app.config.SWAGGER_UI_DOC_EXPANSION = 'full'
 
 ##
 conn_video = api.model('conn_vide', {
-    'type': fields.String,
-    'address': fields.String,
-    'camIdx': fields.String
+    'cams': fields.List(fields.Raw({"type": "String"}, io="r"))
+    # 'type': fields.String,
+    # 'address': fields.String,
+    # 'camIdx': fields.String
 })
 
 
@@ -29,28 +32,25 @@ class ConnVideo(Resource):
     def post(self, model=conn_video):
 
         parser = reqparse.RequestParser()
-        parser.add_argument('type', type=str)
-        parser.add_argument('address', type=str)
-        parser.add_argument('camIdx', type=str)
+        # parser.add_argument('cams', default=list, action='split')
+        parser.add_argument('cams', default=list, action='append')
         args = parser.parse_args()
         print(args)
 
-        vid = video.Video(args)
-        # vid.play()
+        print(args['cams'])
+        cam_len = len(args['cams'])
+        print("cam len = ", cam_len)
 
-        # test multi thread
-        video_list = []
-        video_list.append(args['address'])
-        video_list.append(args['address'])
-        print(video_list)
+        cams = args['cams']
+        cams_json = []
+        for cam in cams:
+            cam_json = json.loads(cam.replace("'", '"'))
+            cams_json.append(cam_json)
 
-        # players = [video.Video(vi) for vi in video_list]
-        # threads = [threading.Thread(target=player.play) for player in players]
+        print(cams_json[0]['address'])
 
-        # for thread in threads:
-        #     thread.start()
-        # for thread in threads:
-        #     thread.join()
+        vid = v.Video(cams_json)
+        vid.run()
 
         result = {
             'status': 0,
