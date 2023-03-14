@@ -9,17 +9,43 @@ class Video():
         print("video class is created")
         # print(json)
         print(calib)
+        self.calib = calib
 
         self.len = len(json)
 
         self.address = []
         self.camIdx = []
+        self.pts = []
         for i in range(self.len):
-            print("ch ", i)
             self.address.append(json[i]['address'])
             self.camIdx.append(json[i]['camIdx'])
+            self.pts.append(
+                [
+                    (int(calib['points'][i]['pts_3d']['X1']),
+                     int(calib['points'][i]['pts_3d']['Y1'])),
+                    (int(calib['points'][i]['pts_3d']['X2']),
+                     int(calib['points'][i]['pts_3d']['Y2'])),
+                    (int(calib['points'][i]['pts_3d']['X3']),
+                     int(calib['points'][i]['pts_3d']['Y3'])),
+                    (int(calib['points'][i]['pts_3d']['X4']),
+                     int(calib['points'][i]['pts_3d']['Y4']))
+                ]
+            )
+        print(self.pts)
+
+    def draw_pts(self, index, frame):
+        pts = self.pts
+
+        for i in range(4):
+            # print(i)
+            # print(pts[index][i])
+            cv2.circle(frame, pts[index][i], 10, (0, 255, 0), 3)
+        # cv2.circle(frame,)
+
+        return frame
 
     def play(self, index):
+        print("idx : ", self.camIdx[index])
         cap = None
         try:
             cap = cv2.VideoCapture(self.address[index])
@@ -45,6 +71,7 @@ class Video():
                 break
 
             # tracking
+            frame = self.draw_pts(index, frame)
 
             frame = cv2.resize(frame, (1920, 1080), cv2.INTER_AREA)
             cv2.imshow(idx, frame)
