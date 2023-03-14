@@ -10,6 +10,7 @@ from flask_restx import fields, Resource, Api, reqparse, marshal
 # from job_manager import JobManager
 # from db_layer import NewPool, DBLayer
 from video import video as v
+from video.calibration import Calib
 import threading
 
 app = Flask(__name__)
@@ -19,9 +20,6 @@ app.config.SWAGGER_UI_DOC_EXPANSION = 'full'
 ##
 conn_video = api.model('conn_vide', {
     'cams': fields.List(fields.Raw({"type": "String"}, io="r"))
-    # 'type': fields.String,
-    # 'address': fields.String,
-    # 'camIdx': fields.String
 })
 
 
@@ -35,11 +33,8 @@ class ConnVideo(Resource):
         # parser.add_argument('cams', default=list, action='split')
         parser.add_argument('cams', default=list, action='append')
         args = parser.parse_args()
-        print(args)
 
-        print(args['cams'])
         cam_len = len(args['cams'])
-        print("cam len = ", cam_len)
 
         cams = args['cams']
         cams_json = []
@@ -47,9 +42,10 @@ class ConnVideo(Resource):
             cam_json = json.loads(cam.replace("'", '"'))
             cams_json.append(cam_json)
 
-        print(cams_json[0]['address'])
+        cal = Calib(cams_json)
+        cal_data = cal.parse_pts()
 
-        vid = v.Video(cams_json)
+        vid = v.Video(cams_json, cal_data)
         vid.run()
 
         result = {

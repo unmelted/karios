@@ -5,33 +5,19 @@ import threading
 
 class Video():
 
-    def __init__(self, json):
+    def __init__(self, json, calib):
         print("video class is created")
-        print(json)
+        # print(json)
+        print(calib)
 
         self.len = len(json)
-        print(self.len)
+
         self.address = []
         self.camIdx = []
         for i in range(self.len):
             print("ch ", i)
             self.address.append(json[i]['address'])
             self.camIdx.append(json[i]['camIdx'])
-        # self.address.append(json[0]['address'])
-        # self.camIdx.append(json[0]['camIdx'])
-        print(json[0]['address'])
-
-        # self.fps = self.cap.get(cv2.CAP_PROP_FPS)
-
-    # def __init__(self, args):
-    #     self.type = args['type']
-    #     self.path = args['address']
-    #     self.camIdx = args['camIdx']
-    #     print("video class is created")
-    #     # print(args)
-    #     print("type : ", self.type)
-    #     print("path : ", self.path)
-    #     print("cam index : ", self.camIdx)
 
     def play(self, index):
         cap = None
