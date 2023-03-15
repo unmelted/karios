@@ -11,6 +11,7 @@ from flask_restx import fields, Resource, Api, reqparse, marshal
 # from db_layer import NewPool, DBLayer
 from video import video as v
 from video.calibration import Calib
+from merger.merge import Merger
 import threading
 
 app = Flask(__name__)
@@ -44,6 +45,8 @@ class ConnVideo(Resource):
 
         cal = Calib(cams_json)
         cal_data = cal.parse_pts()
+
+        mer = Merger(cal_data)
 
         vid = v.Video(cams_json, cal_data)
         vid.run()

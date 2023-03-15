@@ -37,10 +37,7 @@ class Video():
         pts = self.pts
 
         for i in range(4):
-            # print(i)
-            # print(pts[index][i])
             cv2.circle(frame, pts[index][i], 10, (0, 255, 0), 3)
-        # cv2.circle(frame,)
 
         return frame
 
