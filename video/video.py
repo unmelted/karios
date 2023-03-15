@@ -1,21 +1,25 @@
 import os
 import cv2
 import threading
+import numpy as np
+
+
+class Point:
+    x = 0.0
+    y = 0.0
 
 
 class Video():
 
-    def __init__(self, json, calib):
+    def __init__(self, json, calib, world):
         print("video class is created")
-        # print(json)
-        print(calib)
         self.calib = calib
-
         self.len = len(json)
 
         self.address = []
         self.camIdx = []
         self.pts = []
+        # put 3d points in pts
         for i in range(self.len):
             self.address.append(json[i]['address'])
             self.camIdx.append(json[i]['camIdx'])
@@ -31,7 +35,43 @@ class Video():
                      int(calib['points'][i]['pts_3d']['Y4']))
                 ]
             )
-        print(self.pts)
+
+        img_path = os.getcwd() + '\\Soccer_Half.png'
+        self.world_img = cv2.imread(img_path)
+
+        # put world_points in dst_pts for find homo matrix
+        self.dst_pts = []
+        world_points = list()
+        for i in range(4):
+            p = Point()
+            p.x = world[i][0]
+            p.y = world[i][1]
+            world_points.append(p)
+        self.dst_pts = np.array([[e.x, e.y] for e in world_points])
+
+    def find_Homo(self, index):
+        calib = self.calib
+        points = list()
+        for i in range(4):
+            p = Point()
+            p.x = self.pts[index][i][0]
+            p.y = self.pts[index][i][1]
+            points.append(p)
+        src_pts = np.array([[e.x, e.y] for e in points])
+
+        H, status = cv2.findHomography(
+            self.dst_pts, src_pts, cv2.RANSAC)       # world to channel
+        # H, status = cv2.findHomography(src_pts, self.dst_pts, cv2.RANSAC)     # channel to world
+
+        return H
+
+    def calc_warp_pts(self, H, pts):
+        x = (H[0][0]*pts[0] + H[0][1]*pts[1] + H[0][2]) / \
+            (H[2][0]*pts[0] + H[2][1]*pts[1]+1)
+        y = (H[1][0] * pts[0] + H[1][1] * pts[1] + H[1][2]) / \
+            (H[2][0]*pts[0] + H[2][1]*pts[1] + 1)
+
+        return (int(x), int(y))
 
     def draw_pts(self, index, frame):
         pts = self.pts
@@ -42,7 +82,17 @@ class Video():
         return frame
 
     def play(self, index):
-        print("idx : ", self.camIdx[index])
+        pt1 = (200, 530)
+        pt2 = (240, 590)
+        cv2.circle(self.world_img, pt1, 10, (120, 150, 0), -1)
+        cv2.circle(self.world_img, pt2, 10, (20, 50, 200), -1)
+        cv2.imshow('world image', self.world_img)
+
+        h = self.find_Homo(index)
+
+        pt1_warped = self.calc_warp_pts(h, pt1)
+        pt2_warped = self.calc_warp_pts(h, pt2)
+
         cap = None
         try:
             cap = cv2.VideoCapture(self.address[index])
@@ -68,6 +118,8 @@ class Video():
                 break
 
             # tracking
+            cv2.circle(frame, pt1_warped, 20, (120, 150, 0), -1)
+            cv2.circle(frame, pt2_warped, 20, (20, 50, 200), -1)
             frame = self.draw_pts(index, frame)
 
             frame = cv2.resize(frame, (1920, 1080), cv2.INTER_AREA)
@@ -91,5 +143,3 @@ class Video():
 
         for thread in threads:
             thread.join()
-
-        # self.play(0)

@@ -29,6 +29,7 @@ class Calib():
         data['worlds'] = json_data['worlds']
         cnt = 0
 
+        # Store only the values of the necessary channels
         for dict_args in self.args:
             for dict_data in json_data['points']:
                 if dict_args['camIdx'] == dict_data['dsc_id']:
@@ -49,10 +50,5 @@ class Calib():
                         "Group": dict_data['Group'],
                         "pts_3d": pts_3d
                     })
-                    print(pts_3d)
-
-        print(data)
 
         return data
-        # for idx in args:
-        #     cam_idxs.append(idx['camIdx'])

@@ -18,7 +18,6 @@ app = Flask(__name__)
 api = Api(app, version='0.1', title='KAIROS')
 app.config.SWAGGER_UI_DOC_EXPANSION = 'full'
 
-##
 conn_video = api.model('conn_vide', {
     'cams': fields.List(fields.Raw({"type": "String"}, io="r"))
 })
@@ -31,11 +30,8 @@ class ConnVideo(Resource):
     def post(self, model=conn_video):
 
         parser = reqparse.RequestParser()
-        # parser.add_argument('cams', default=list, action='split')
         parser.add_argument('cams', default=list, action='append')
         args = parser.parse_args()
-
-        cam_len = len(args['cams'])
 
         cams = args['cams']
         cams_json = []
@@ -43,12 +39,15 @@ class ConnVideo(Resource):
             cam_json = json.loads(cam.replace("'", '"'))
             cams_json.append(cam_json)
 
+        # Parse only the point value of the desired channel in the .pts file
         cal = Calib(cams_json)
         cal_data = cal.parse_pts()
 
+        # Parse world points
         mer = Merger(cal_data)
+        world_pts = mer.get_world_pts()
 
-        vid = v.Video(cams_json, cal_data)
+        vid = v.Video(cams_json, cal_data, world_pts)
         vid.run()
 
         result = {

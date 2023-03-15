@@ -9,6 +9,7 @@ class Merger():
         img_path = os.getcwd() + '\\Soccer_Half.png'
 
         world_img = cv2.imread(img_path)
+        self.img = world_img
 
         print(data)
         world_pts = None
@@ -23,8 +24,18 @@ class Merger():
         pts.append(((int(world_pts['X4'])), int(world_pts['Y4'])))
 
         print(pts)
-        for i in range(4):
-            cv2.circle(world_img, pts[i], 10, (0, 255, 100), 3)
+        self.pts = pts
 
-        cv2.imshow('world', world_img)
-        cv2.waitKey()
+        # for i in range(4):
+        #     cv2.circle(world_img, pts[i], 6, (0, 255, 100), 3)
+
+        # cv2.imshow('world', world_img)
+        # cv2.waitKey()
+
+        # cv2.destroyAllWindows()
+
+    def get_world_pts(self):
+        return self.pts
+
+        # cv2.imshow('world', self.img)
+        # cv2.waitKey()
