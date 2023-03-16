@@ -125,7 +125,7 @@ class Video():
             frame = cv2.resize(frame, (1920, 1080), cv2.INTER_AREA)
             cv2.imshow(idx, frame)
 
-            if cv2.waitKey(10) & 0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 # if cv2.waitKey(int(1000/fps)) & 0xFF == ord('q'):
                 break
 
