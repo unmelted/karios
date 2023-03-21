@@ -36,7 +36,7 @@ class Video():
                 ]
             )
 
-        img_path = os.getcwd() + '\\Soccer_Half.png'
+        img_path = './/Soccer_Half.png'
         self.world_img = cv2.imread(img_path)
 
         # put world_points in dst_pts for find homo matrix

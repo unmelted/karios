@@ -12,7 +12,9 @@ from flask_restx import fields, Resource, Api, reqparse, marshal
 from video import video as v
 from video.calibration import Calib
 from merger.merge import Merger
-import threading
+
+from config.config import config
+
 
 app = Flask(__name__)
 api = Api(app, version='0.1', title='KAIROS')
@@ -47,6 +49,12 @@ class ConnVideo(Resource):
         mer = Merger(cal_data)
         world_pts = mer.get_world_pts()
 
+        # tracker API
+        model_param = " " + cams_json[0]['address']
+        print(model_param)
+        os.system('python3 ' + config.tracker_api_dir + 'tracker_api_rtsp.py ' + model_param + ' &')
+
+        # Play videos
         vid = v.Video(cams_json, cal_data, world_pts)
         vid.run()
 

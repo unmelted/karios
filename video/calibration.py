@@ -11,9 +11,8 @@ class Calib():
         print("Calibration is created")
         self.args = args
 
-        # for test
-        pts_path = os.getcwd() + '\\test.pts'
-
+        # pts_path = os.getcwd() + '/test.pts'
+        pts_path = './test.pts'
         self.json_data = None
         with open(pts_path, 'r') as f:
             self.json_data = json.load(f)
