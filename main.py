@@ -56,7 +56,7 @@ class ConnVideo(Resource):
 
         # Play videos
         vid = v.Video(cams_json, cal_data, world_pts)
-        vid.run()
+        # vid.run()
 
         result = {
             'status': 0,

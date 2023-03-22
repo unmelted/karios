@@ -59,7 +59,70 @@ class rtsp_lib:
         RtspClient = Mod.RtspClient_new()
         Mod.OpenURL(RtspClient, bytes(rtsp_url, 'utf-8'), 20)
 
-       
+        CMPFUNC = CFUNCTYPE(c_void_p, POINTER(c_void_p), c_int, c_longlong, POINTER(c_char), c_int, c_longlong)
+
+        cmp_func = CMPFUNC(self.frameCallBack)
+        Mod.PlayUrl(cmp_func, RtspClient)
+
+        while True:
+            try:
+                get_frame = self.frame_no
+                get_image = self.get_img
+
+                #test
+                resize_img = cv2.resize(get_image, (1920,1080))
+                ret, main_frame = cv2.imencode('.jpg', resize_img)
+
+
+
+                # tracked, image_frame, loc_data = T.infer_single_frame_from_stream(raw_frame=get_image,vis=True)
+                msg = {}
+                msg['id'] = []
+                msg['box'] = []
+                msg['frame'] = []
+                msg['lost_id'] = []
+                msg['loc'] = []
+                # resize_img = cv2.resize(image_frame, (1750, 300))
+                # ret, main_frame = cv2.imencode('.jpg', resize_img)
+                # msg['id'].append(0)
+                # msg['box'].append([0,0,0,0])
+                # msg['frame'].append(base64.b64encode(main_frame).decode('utf-8'))
+                # msg['loc'].append([0,0])
+                # msg['frame_id'] = get_frame
+                # for i, tracked_data in enumerate(tracked.tracked_stracks):
+                #     bbox = list(map(int,tracked_data.tlbr))
+                #     msg['id'].append(tracked_data.track_id)
+                #     msg['box'].append(bbox)
+                #     msg['loc'].append(loc_data[i])
+                #     cropped_frame = image_frame[bbox[1]+1:bbox[3],bbox[0]+1:bbox[2]]
+                #     resize_frame = cv2.resize(cropped_frame, (50, 100))
+                #     ret, cropped_img = cv2.imencode('.jpg', resize_frame)
+                #     msg['frame'].append(base64.b64encode(cropped_img).decode('utf-8'))
+                # await websocket.send(json.dumps(msg))
+            except Exception as e:
+                pass
+
+
+
+
+    def frameCallBack(self, arg, frame_type, timestamp, buf, len, nReplayFramNum):
+
+        ret = libfr.fr_decode_ex(handle, buf, len, nReplayFramNum, outVideo)
+
+        try:
+            tmp = ctypes.cast(outVideo.data, POINTER(ctypes.c_byte * 3 * outVideo.width * outVideo.height)).contents
+            img = np.frombuffer(tmp, dtype=np.uint8)
+            img = img.reshape(outVideo.height, outVideo.width, 3)
+            print(type(img))
+            # cv2.imshow("img test",img)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                cv2.destroyAllWindows()
+            self.frame_no = nReplayFramNum
+            self.get_img = img
+        except:
+            pass
+
+
 
 
     def run(self):
