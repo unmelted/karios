@@ -55,6 +55,7 @@ class ConnVideo(Resource):
         # Play videos
         # vid = v.Video(cams_json, cal_data, world_pts)
         # vid.run()
+        '''
 
         result = {
             'status': 0,
@@ -64,6 +65,13 @@ class ConnVideo(Resource):
 
         return result
 
+@api.route('/kairos/get_version')
+@api.doc()
+class GetVersion(Resource) :
+    def get(self) :
+        print("call get version ")
+
 
 if __name__ == '__main__':
+
     app.run(debug=False, host='0.0.0.0', port=3061)
