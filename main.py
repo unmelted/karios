@@ -21,7 +21,9 @@ api = Api(app, version='0.1', title='KAIROS')
 app.config.SWAGGER_UI_DOC_EXPANSION = 'full'
 
 conn_video = api.model('conn_vide', {
-    'cams': fields.List(fields.Raw({"type": "String"}, io="r"))
+    'cams': fields.List(fields.Raw({"type": "RTSP",
+ 	 "address": "rtsp://admin:admin@10.82.5.129/3082_210_270.mp4",
+ 	 "camIdx": "003082"}, io="r"))
 })
 
 
@@ -55,7 +57,7 @@ class ConnVideo(Resource):
         os.system('python3 ' + config.tracker_api_dir + 'tracker_api_rtsp.py ' + model_param + ' &')
 
         # Play videos
-        vid = v.Video(cams_json, cal_data, world_pts)
+        # vid = v.Video(cams_json, cal_data, world_pts)
         # vid.run()
 
         result = {
@@ -68,4 +70,4 @@ class ConnVideo(Resource):
 
 
 if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0', port=3060)
+    app.run(debug=False, host='0.0.0.0', port=3061)
