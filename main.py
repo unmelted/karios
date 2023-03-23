@@ -5,15 +5,10 @@ from multiprocessing import Process, Queue
 from flask import Flask
 from flask import request, jsonify
 from flask_restx import fields, Resource, Api, reqparse, marshal
-# import definition as df
-# from exodus import *
-# from job_manager import JobManager
-# from db_layer import NewPool, DBLayer
-from video import video as v
-from video.calibration import Calib
-from merger.merge import Merger
 
-from config.config import config
+# from video import video as v
+# from video.calibration import Calib
+# from merger.merge import Merger
 
 
 app = Flask(__name__)
@@ -44,6 +39,7 @@ class ConnVideo(Resource):
             cams_json.append(cam_json)
 
         # Parse only the point value of the desired channel in the .pts file
+        '''
         cal = Calib(cams_json)
         cal_data = cal.parse_pts()
 

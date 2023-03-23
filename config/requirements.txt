@@ -17,4 +17,10 @@ pyrsistent==0.19.3
 pytz==2022.7.1
 Werkzeug 
 zipp
-
+pyTelegramBotAPI
+cutelog
+imageio
+psycopg
+psycopg-pool
+psutil
+json5
