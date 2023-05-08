@@ -4,7 +4,7 @@ from datetime import datetime
 from logging.handlers import SocketHandler
 import telebot
 from logging import Handler, LogRecord
-from define import definition as defn
+from define import Definition as defn
 
 
 class TelegramBotHandler(Handler):

@@ -54,7 +54,7 @@ class BaseQuery(object):
 
     def loadjson(self):
         json_file = open(os.path.join(
-            os.getcwd(), 'json', 'handle_table.json'), 'r')
+            os.getcwd(), 'util/handle_table.json'), 'r')
         sql_list = json.load(json_file)
         return sql_list
 
@@ -116,7 +116,7 @@ class DBLayer(object):
     @staticmethod
     def initialize(connection):
         json_file = open(os.path.join(
-            os.getcwd(), 'json', 'handle_table.json'), 'r')
+            os.getcwd(), 'util/handle_table.json'), 'r')
         sql_list = json.load(json_file)
 
         create = ["create_command", "create_task_manager"]

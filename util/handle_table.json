@@ -1,7 +1,7 @@
 {
-	"create_command": "CREATE TABLE IF NOT EXISTS command (no SERIAL PRIMARY KEY NOT NULL, datetime TIMESTAMP DEFAULT NOW(), job_id INTEGER NOT NULL, parent_job INTEGER, event_id TEXT, task TEXT NOT NULL, config1 TEXT, config2 TEXT, status INTEGER , result_id INTEGER, result_msg TEXT, terminate INTEGER);",
+	"create_command": "CREATE TABLE IF NOT EXISTS command (no SERIAL PRIMARY KEY NOT NULL, datetime TIMESTAMP DEFAULT NOW(), job_id INTEGER NOT NULL, parent_job INTEGER, event_id TEXT, config1 TEXT, config2 TEXT, status INTEGER , result_id INTEGER, result_msg TEXT);",
 	"create_task_manager": "CREATE TABLE IF NOT EXISTS job_manager (job_id INTEGER PRIMARY KEY, pid TEXT, cancel TEXT, cancel_date TIMESTAMP, complete TEXT, complete_date TIMESTAMP);",
-	"create_tracking": "CREATE TABLE IF NOT EXISTS tracking_info (job_id INTEGER PRIMARY KEY, datetime TIMESTAMP DEFAULT NOW(), result JSON );",
+	"create_tracking": "CREATE TABLE IF NOT EXISTS tracking_info (job_id INTEGER PRIMARY KEY, datetime TIMESTAMP DEFAULT NOW(), info JSON );",
 	"create_event": "CREATE TABLE IF NOT EXISTS  (no SERIAL PRIMARY KEY NOT NULL, job_id INTEGER, parent_job INTEGER, createdate TIMESTAMP DEFAULT NOW(), pt_2d INTEGER[], pt_3d INTEGER[], world INTEGER[], margin_left INTEGER, margin_top INTEGER, margin_width INTEGER, margin_height INTEGER);",
 	"query_task_id": "SELECT job_id FROM command ORDER BY task_id DESC",
 	"query_status": "SELECT status, result_id FROM command where task_id = "

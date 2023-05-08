@@ -1,14 +1,14 @@
 import os
-import json
-import ast
+
 from multiprocessing import Process, Queue
 from flask import Flask
 from flask import request, jsonify
 from flask_restx import fields, Resource, Api, reqparse, marshal
+
 from define import Definition as defn
-# from video import video as v
-# from video.calibration import Calib
-# from merger.merge import Merger
+from task import TaskManager
+from db_layer import NewPool, DBLayer
+from command import *
 
 
 app = Flask(__name__)
@@ -76,5 +76,10 @@ class GetVersion(Resource) :
         'version' : ver}
 
 if __name__ == '__main__':
+    np = NewPool()
+    DBLayer.initialize(np.getConn())
+
+    pr = Process(target=Commander.receiver, args=())
+    jr = Process(target=TaskManager.Watcher)
 
     app.run(debug=False, host='0.0.0.0', port=9001)

@@ -15,23 +15,24 @@ class Commander() :
 	def get_msgq(cls) :
 		return cls.msg_q
 
-    @classmethod
-    def add_task(cls, task):
-        print("commander add task is called ", cls.cmd_q)
+	@classmethod
+	def add_task(cls, task):
+		print("commander add task is called ", cls.cmd_q)
 
-        if TaskActivity.checkJobsUnderLimit() is True:
-            job_id = DbManager.getJobIndex() + 1
-            cls.cmd_q.put((task, job_id))
-            l.get().w.info("Alloc job id {} ".format(job_id))
+		if TaskActivity.checkJobsUnderLimit() is True:
+			job_id = DbManager.getJobIndex() + 1
+			cls.cmd_q.put((task, job_id))
+			l.get().w.info("Alloc job id {} ".format(job_id))
 
-            return job_id
-        else:
-            return -22
+			return job_id
+		else:
+			return -22
 
 	@classmethod
 	def receiver(cls) :
 		while True :
 			time.sleep(0.2)
+			print("..")
 
 			if (cls.cmd_q.emtpy() is False) :
 				task = que.get()
