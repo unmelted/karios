@@ -1,5 +1,5 @@
 import os
-from enum import enum
+import enum
 
 VERSION = 'V0.0.0.1'
 
@@ -13,17 +13,18 @@ class RequestCategory :
 
 class Definition(object) : 
 	
-    BOT_TOKEN = '5578949849:AAEJHteVLGJnydip3x5eYwJQQgcPymWGu4s'
-    CHAT_ID = '1140943041'  # '5623435982'
+	BOT_TOKEN = '5578949849:AAEJHteVLGJnydip3x5eYwJQQgcPymWGu4s'
+	CHAT_ID = '1140943041'  # '5623435982'
 
 	def get_version(self):
 		return VERSION
 
 def get_err_msg(err_code) :
+
 	msg = None
 	msg_pair = {
 		0 : "ERR_NONE",
-		100 : "Complete"
+		100 : "Complete",
 
 		-1 : "PROC_ERR"
 	}
