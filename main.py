@@ -6,6 +6,7 @@ from flask import request, jsonify
 from flask_restx import fields, Resource, Api, reqparse, marshal
 
 from define import Definition as defn
+from define import RequestCategory as rc
 from task import TaskManager
 from db_layer import NewPool, DBLayer
 from command import *
@@ -19,7 +20,21 @@ ready_info = api.model('ready_info', {
     'task_id' : fields.String,
     'tracker' : fields.List(fields.Raw({ "type" : "String"}, io = 'r'))
 })
+'''
+{
+    task_id : ‘2023_0908_1534’,
+    tracker : [
 
+            {
+               camera_id : ‘001101’,
+               tracker_ip : ‘10.82.1.11’,
+               stream_url : ‘rtsp://…’
+
+             },
+     ]
+} 
+
+'''
 
 @api.route('/kairos/ready')
 @api.doc()
@@ -28,9 +43,11 @@ class ready(Resource):
     def post(self, model=ready_info):
 
         parser = reqparse.RequestParser()
-        parser.add_argument('cams', default=list, action='append')
+        parser.add_argument('task_id', type=str)
+        parser.add_argument('tracker', default=list, action='append')
         args = parser.parse_args()
 
+        job_id = Commander.add_task(rc.TRACKER_READY,  args)
         result = {
             'status': 0,
             'job_id': 0,
@@ -78,8 +95,14 @@ class GetVersion(Resource) :
 if __name__ == '__main__':
     np = NewPool()
     DBLayer.initialize(np.getConn())
-
-    pr = Process(target=Commander.receiver, args=())
+    
+    # que = Commander.get_cmdq()
+    pr = Process(target=Commander.receiver)
+    mr = Process(target=Commander.receiver_msg)    
     jr = Process(target=TaskManager.Watcher)
+
+    pr.start()
+    mr.start()
+    jr.start()
 
     app.run(debug=False, host='0.0.0.0', port=9001)

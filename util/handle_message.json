@@ -1,0 +1,17 @@
+{
+	"setinfo": {
+		"camera_id": "001101",
+		"stream_url": "10.82.1.101",
+		"result_send_info": {
+			"ip": "10.82.5.136",
+			"port": 5672,
+			"queue": "kairos"
+		},
+		"result_send_type": {
+			"team_flag": [
+				"RED",
+				"BLUE"
+			]
+		}
+	}
+}

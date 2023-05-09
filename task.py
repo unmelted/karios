@@ -17,11 +17,10 @@ class TaskManager(BaseQuery):
         while (True):
             time.sleep(2)
             TaskManager.check_pid()
-            print(".. ")
 
     @classmethod
     def check_pid(cls):
-        count, jids, pid1s, pid2s = TaskManager.getActiveJobs()
+        count, jids, pids = TaskManager.getActiveJobs()
         if count == 0:
             return 0
 
@@ -33,7 +32,7 @@ class TaskManager(BaseQuery):
             p = None
             job_id = jids[i]
             if job_id in cids:
-                TaskManager.cancelProcess(job_id, pid1s[i], pid2s[i])
+                TaskManager.cancelProcess(job_id, pid)
 
         return 0
 
@@ -41,7 +40,6 @@ class TaskManager(BaseQuery):
     def getCancelJobs(cls):
         cids = []
         q = TaskManager.sql_list['query_getcanceljobs']
-        # l.get().w.debug("Get canceljobs Query: {} ".format(q))
 
         rows = DBLayer.queryWorker( 'select-all', q)
 
@@ -52,32 +50,23 @@ class TaskManager(BaseQuery):
         return cids
 
     @ classmethod
-    def cancelProcess(cls, job_id, pid1, pid2):
+    def cancelProcess(cls, job_id, pid):
+            
+        if pid < 0:
+            l.get().w.critical("cancel malfuction minus pid: {} ".format(job_id))
 
-        for i in range(0, 3):
-            if i == 0:
-                pid = pid1
-            elif i == 1:
-                pid = pid2
-            elif i == 2 :
-                pid += 1
-                
-            if pid < 0:
-                l.get().w.critical("cancel malfuction minus pid: {} ".format(job_id))
-                continue
+        try:
+            p = psutil.Process(pid)
+            print(p)
+            p.terminate()
+            l.get().w.critical("---------------------cancel process : {}".format(pid))
+            time.sleep(1)
+        except psutil.NoSuchProcess:
+            l.get().w.critical("No such process pid {}. already disappeared.".format(pid))
 
-            try:
-                p = psutil.Process(pid)
-                print(p)
-                p.terminate()
-                l.get().w.critical("---------------------cancel process : {}".format(pid))
-                time.sleep(1)
-            except psutil.NoSuchProcess:
-                l.get().w.critical("No such process pid {}. already disappeared.".format(pid))
-
-            except psutil.AccessDenied:
-                l.get().w.critical("Acess Deineid to SystemProcess")
-                result = -23
+        except psutil.AccessDenied:
+            l.get().w.critical("Acess Deineid to SystemProcess")
+            result = -23
 
         # q = self.sql_list['query_deletejobs'] + str(job_id)
         # l.get().w.debug("delte jobs Query: {} ".format(q))
@@ -99,32 +88,26 @@ class TaskManager(BaseQuery):
     def getActiveJobs(cls):
         count = 0
         jids = []
-        pid1s = []
-        pid2s = []
+        pids = []
         q = cls.sql_list['query_getactivejobs']
         rows = DBLayer.queryWorker( 'select-all', q)
 
         if len(rows) == 0:
-            return 0, 0, 0, 0
+            return 0, 0, 0
         else:
             count = len(rows)
 
         for i in range(0, count):
             jids.append(rows[i][0])
             if rows[i][1] != 'None':
-                pid1s.append(int(rows[i][1]))
+                pids.append(int(rows[i][1]))
             else:
-                pid1s.append(-1)
-            if rows[i][2] != 'None':
-                pid2s.append(int(rows[i][2]))
-            else:
-                pid2s.append(-1)
+                pids.append(-1)
 
         print("active jids : ", jids)
-        print("active pids : ", pid1s)
-        print("active pids : ", pid2s)
+        print("active pids : ", pids)
         print("active pids count : ", count)
-        return count, jids, pid1s, pid2s
+        return count, jids, pids
 
 class TaskActivity(BaseQuery) :
     conn = NewPool().getConn()
@@ -154,7 +137,7 @@ class TaskActivity(BaseQuery) :
         print("jobmanager check jobs under limit")
         curJobs = TaskActivity.countActiveJobs()
         print("cur jobs : ", curJobs)
-        if curJobs < defn.job_limit:
+        if curJobs < defn.task_limit:
             return True
         else:
             return False
@@ -183,7 +166,7 @@ class TaskActivity(BaseQuery) :
     @classmethod
     def insertNewJob(cls, job_id, pid1=None):
         q = BaseQuery.insert('job_manager', job_id=job_id,
-                             pid1=pid1, pid2='None', complete='running')
+                             pid1=pid, complete='running')
         result = DBLayer.queryWorker( 'insert', q)
 
     @classmethod
@@ -191,7 +174,5 @@ class TaskActivity(BaseQuery) :
         if type == 'complete':
             q = BaseQuery.update('job_manager', complete='done',
                                  complete_date='NOW()', job_id=job_id)
-        elif type == 'updatepid2':
-            q = BaseQuery.update('job_manager', pid2=param,  job_id=job_id)
 
         result = DBLayer.queryWorker( 'update', q)
