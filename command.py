@@ -68,7 +68,7 @@ class Commander() :
 		l.get().w.debug("task proc start : {}".format(job_id))
 
 		if category == rc.TRACKER_READY :
-			multi_tracker = MultiTracker(cls.msg_q)
+			multi_tracker = MultiTracker(cls.msg_q, job_id)
 			multi_tracker.prepare(task)
 
 	@classmethod
@@ -78,13 +78,17 @@ class Commander() :
 			time.sleep(0.3)
 
 			if (cls.msg_q.empty() is False) :
-				url, data = cls.msg_q.get()
+				url, data, callback = cls.msg_q.get()
 				print(url)
 				print("msg_q receive data : ", json.dumps(data))
+				print(callback)
 
-				response = requests.post(url, json=data)
+				# response = requests.post(url, json=data)
+				response = {'ret' : 'ok'}
+				print(response)
+				callback(response)
 
-				if response.status_code == 200:
-					print("response success: ", response)
-				else : 
-					print("response error : ", response)
+				# if response.status_code == 200:
+				# 	print("response success: ", response)
+				# else : 
+				print("response error : ", response)

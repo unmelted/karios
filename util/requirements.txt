@@ -24,3 +24,5 @@ psycopg
 psycopg-pool
 psutil
 json5
+pika
+requests
