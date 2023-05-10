@@ -5,7 +5,7 @@ from flask import Flask
 from flask import request, jsonify
 from flask_restx import fields, Resource, Api, reqparse, marshal
 
-from define import Definition as defn
+import define  as defn
 from define import RequestCategory as rc
 from task import TaskManager
 from db_layer import NewPool, DBLayer
@@ -47,10 +47,17 @@ class ready(Resource):
         parser.add_argument('tracker', default=list, action='append')
         args = parser.parse_args()
 
-        job_id = Commander.add_task(rc.TRACKER_READY,  args)
+        job_id = Commander().add_task(rc.TRACKER_READY,  args)
+        status = 0
+
+        if job_id > 0 :
+            status = 200
+        else :
+            status = 500
+
         result = {
             'status': 0,
-            'job_id': 0,
+            'job_id': job_id,
             'message': 'SUCCESS',
         }
 
@@ -60,27 +67,56 @@ job_id = api.model('job_id', {
     'job_id': fields.String,
 })
 
-@api.route('/kairos/run/<job_id>')
+@api.route('/kairos/start/<job_id>')
 @api.doc()
-class Run(Resource) :
+class Start(Resource) :
     def put(self, job_id=job_id):
-        print("call Run ", job_id)
-        return {'result' : 'OK'}
+        print("start receive.. job_id : ", job_id)
+        result  = Commander().add_task(rc.TRACKER_START, job_id)
+        # msg = defn.get_err_msg(status)
+
+        result = {
+            # 'status' : status,
+            'result' : result,
+            # 'message' : msg
+        }
+
+        return result
 
 
 @api.route('/kairos/stop/<job_id>')
 @api.doc()
 class Stop(Resource) :
     def put(self, job_id=job_id):
-        print("call stop" , job_id)
-        return {'result' : 'OK'}        
+        
+        result, status = Commander.request_query(rc.TRACKER_STOP, job_id)
+        msg = defn.get_err_msg(status)
+
+        result = {
+            'status' : status,
+            'result' : result,
+            'message' : msg
+        }
+
+        return result
+  
 
 @api.route('/kairos/status/<job_id>')
 @api.doc()
 class GetStatus(Resource) :
     def get(self, job_id=job_id):
-        print("call status ", job_id)
-        return {'result' : 'OK'}
+
+        result, status = Commander.request_query(rc.TRACKER_STATUS, job_id)
+        msg = defn.get_err_msg(status)
+
+        result = {
+            'status' : status,
+            'result' : result,
+            'message' : msg
+        }
+
+        return result
+
 
 @api.route('/kairos/get_version')
 @api.doc()
@@ -97,8 +133,8 @@ if __name__ == '__main__':
     DBLayer.initialize(np.getConn())
     
     # que = Commander.get_cmdq()
-    pr = Process(target=Commander.receiver)
-    mr = Process(target=Commander.receiver_msg)    
+    pr = Process(target=Commander().receiver)
+    mr = Process(target=Commander().receiver_msg)    
     jr = Process(target=TaskManager.Watcher)
 
     pr.start()

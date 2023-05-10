@@ -7,12 +7,12 @@ class RequestCategory :
 	INIT = 0
 	GET_VERSION = 10
 	TRACKER_READY = 100
-	TRACKER_RUN = 200
+	TRACKER_START = 200
 	TRACKER_STOP = 300
 	TRACKER_FINISH = 400
 	SIMULATION_START = 500
 	SIMULATION_STOP = 600
-
+	TRACKER_STATUS = 700
 
 class Definition(object) : 
 	
@@ -23,6 +23,7 @@ class Definition(object) :
 
 	tracker_name = '/kronos'
 	tracker_port = 7890
+
 
 	def get_version(self):
 		return VERSION
@@ -44,6 +45,8 @@ def get_err_msg(err_code) :
         -23: "Acess Denied to System Process",
         -24: "There is image file problem - Upload again",
         -25: "Canceled Job",
+
+		-101: "There is no prepared Multitracker Job"
 	}
 
 	if err_code in msg_pair :
