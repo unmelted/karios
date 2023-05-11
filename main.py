@@ -20,21 +20,7 @@ ready_info = api.model('ready_info', {
     'task_id' : fields.String,
     'tracker' : fields.List(fields.Raw({ "type" : "String"}, io = 'r'))
 })
-'''
-{
-    task_id : ‘2023_0908_1534’,
-    tracker : [
 
-            {
-               camera_id : ‘001101’,
-               tracker_ip : ‘10.82.1.11’,
-               stream_url : ‘rtsp://…’
-
-             },
-     ]
-} 
-
-'''
 
 @api.route('/kairos/ready')
 @api.doc()
@@ -47,18 +33,12 @@ class ready(Resource):
         parser.add_argument('tracker', default=list, action='append')
         args = parser.parse_args()
 
-        job_id = Commander().add_task(rc.TRACKER_READY,  args)
-        status = 0
-
-        if job_id > 0 :
-            status = 200
-        else :
-            status = 500
-
+        result, status = Commander().add_task(rc.TRACKER_READY, args)
+        msg = defn.get_err_msg(status)
         result = {
-            'status': 0,
-            'job_id': job_id,
-            'message': 'SUCCESS',
+            'status': status,
+            'job_id': result,
+            'message': msg,
         }
 
         return result
@@ -72,13 +52,13 @@ job_id = api.model('job_id', {
 class Start(Resource) :
     def put(self, job_id=job_id):
         print("start receive.. job_id : ", job_id)
-        result  = Commander().add_task(rc.TRACKER_START, job_id)
-        # msg = defn.get_err_msg(status)
+        result, status = Commander().add_task(rc.TRACKER_START, job_id)
+        msg = defn.get_err_msg(status)
 
         result = {
-            # 'status' : status,
+            'status' : status,
             'result' : result,
-            # 'message' : msg
+            'message' : msg
         }
 
         return result
@@ -89,7 +69,7 @@ class Start(Resource) :
 class Stop(Resource) :
     def put(self, job_id=job_id):
         
-        result, status = Commander.request_query(rc.TRACKER_STOP, job_id)
+        result, status = Commander().add_task(rc.TRACKER_STOP, job_id)
         msg = defn.get_err_msg(status)
 
         result = {
@@ -106,7 +86,7 @@ class Stop(Resource) :
 class GetStatus(Resource) :
     def get(self, job_id=job_id):
 
-        result, status = Commander.request_query(rc.TRACKER_STATUS, job_id)
+        result, status = Commander().add_task(rc.TRACKER_STATUS, job_id)
         msg = defn.get_err_msg(status)
 
         result = {
@@ -132,12 +112,9 @@ if __name__ == '__main__':
     np = NewPool()
     DBLayer.initialize(np.getConn())
     
-    # que = Commander.get_cmdq()
-    pr = Process(target=Commander().receiver)
     mr = Process(target=Commander().receiver_msg)    
     jr = Process(target=TaskManager.Watcher)
 
-    pr.start()
     mr.start()
     jr.start()
 

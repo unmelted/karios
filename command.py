@@ -25,38 +25,40 @@ class Commander(metaclass=Singleton) :
 	msg_q = Queue()
 	trck_q = []
 
-	# @classmethod
 	def get_cmdq(self) :
 		return self.cmd_q
 
-	@classmethod
 	def get_msgq(self) :
 		return self.msg_q
 
-	# @classmethod
 	def add_task(self, category, task):
 		print("commander add task is called ", category, task)
-		print("trck_q sizse in add task: ", len(Commander.trck_q))
+
+		result = None
+		status = 0
 
 		if category == rc.TRACKER_READY :
 			if TaskActivity.checkJobsUnderLimit() is True:
 				job_id = DbManager.getJobIndex() + 1
-				# self.cmd_q.put((category, task, job_id))
-				# l.get().w.info("Alloc job id {} ".format(job_id))
-				self.processor(category, task, job_id)
-				
-				return job_id
-			else:
-				return -22
-		elif category == rc.TRACKER_START :
-			self.processor(category, None, task)
+				result, status = self.processor(category, task, job_id)
+				if result == 0 : 
+					result = job_id
+					status = 0
 
-	# @classmethod
+			else:
+				result = None
+				status =  -22
+
+		elif category == rc.TRACKER_START :
+			result, status = self.processor(category, None, task)
+
+		return result, status
+
 	def add_msg(self, url, data):
 		print("commander add msg is called ", url, data)
 		self.cmd_q.put((url, data))
 
-	# @classmethod
+
 	def receiver(self) :
 
 		while True :
@@ -67,7 +69,7 @@ class Commander(metaclass=Singleton) :
 				self.processor(category, task, job_id)
 
 
-	# @classmethod
+
 	def request_query(self, category, job_id) :
 		print("commander receive query ", category, job_id)
 		print("trck_q sizse : ", len(self.trck_q))
@@ -100,27 +102,29 @@ class Commander(metaclass=Singleton) :
 		return result, status
 	'''
 
-	# @classmethod
+
 	def processor(self, category, task, job_id) :
 		result = 0 
 		status = 0
-		l.get().w.debug("task proc start : {}".format(job_id))
-		print("processor  start : ", self, id(Commander.trck_q), len(Commander.trck_q))
+		l.get().w.debug("task processor start  cateory {} job_id {}".format(category, job_id))
+
 
 		if category == rc.TRACKER_READY :
-			trackers = TrackerGroup(self.msg_q, job_id)
+			trackers = TrackerGroup(self.msg_q, task['task_id'], job_id)
 			trackers.prepare(task)
-			Commander.trck_q.append(trackers)
-			print("add trck_q sizse : ", id(Commander.trck_q), len(Commander.trck_q))			
-			print(self)
+			self.trck_q.append(trackers)
+			print("add trck_q sizse : ", id(self.trck_q), len(self.trck_q))			
+			DbManager.insert_newcommand(job_id, 0, task['task_id'])
 
 		elif category == rc.TRACKER_START :
-			print("tracker start.. ", id(Commander.trck_q), len(Commander.trck_q))
 
 			if len(self.trck_q) > 0 :
-				for trck in Commander.trck_q :
-					if (job_id == trck.job_id) :
-						print("matched job id is : ", job_id, trck.job_id)
+				for trck in self.trck_q :
+					print("inner for ", trck.task_id)
+					if (job_id == trck.task_id) :
+						print("matched job id is : ", job_id, trck.task_id)
+						trck.start()
+
 				result = 0
 				status = 100
 
@@ -128,10 +132,11 @@ class Commander(metaclass=Singleton) :
 				result = 0
 				status = -101
 		
-		print("processor end : ", self, id(Commander.trck_q), len(Commander.trck_q))					
+
+		l.get().w.debug("task processor end  cateory {} job_id {}".format(category, job_id))		
 		return result, status
 
-	# @classmethod
+
 	async def receiver_msg(self) :
 
 		while True :

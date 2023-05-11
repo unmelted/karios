@@ -6,6 +6,7 @@ from enum import Enum
 from define import Definition as defn
 from utility import *
 from rabbit import Consumer
+from db_manager import DbManager
 
 
 class Tracker() :
@@ -71,10 +72,12 @@ class TrackerGroup() :
 
 	msg_que = None
 	job_id = None
+	task_id = None
 	trackers = []
 	rabbit = None
 
-	def __init__ (self, que, job_id):
+	def __init__ (self, que, task_id, job_id):
+		self.task_id = task_id
 		self.job_id = job_id
 		self.msg_que = que
 		self.rabbit = Consumer(job_id)
@@ -91,6 +94,7 @@ class TrackerGroup() :
 			print("created tracker : ", tr.tracker_ip, tr.stream_url)
 
 			self.trackers.append(tr)
+			DbManager.insert_tracker_info(self.job_id, tr.tracker_ip, tr.stream_url)
 
 			setinfo_url = tr.send_url + '/setinfo'
 			msg = Messages.assemble_info_msg('setinfo', (tr, self.rabbit.getResultQueInfo()))
@@ -100,6 +104,7 @@ class TrackerGroup() :
 
 
 	def start(self) :
+		print("Tracker Group start is called.. ")
 
 		for tracker in self.trackers :
 			if tracker.lifecycle == tracker.LIFECYCLE_DEF.READY_OK :

@@ -46,7 +46,7 @@ def get_err_msg(err_code) :
         -24: "There is image file problem - Upload again",
         -25: "Canceled Job",
 
-		-101: "There is no prepared Multitracker Job"
+		-101: "There is no prepared Multitracker Job",
 	}
 
 	if err_code in msg_pair :

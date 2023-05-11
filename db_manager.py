@@ -27,14 +27,18 @@ class DbManager(BaseQuery):
         index = rows[0]
         return index
 
-'''
+
     @classmethod
-    def insert_newcommand(cls, job_id, parent_id, ip, task, input_dir, group, config1, config2):
-        q = BaseQuery.insert('command', job_id=job_id, parent_job=parent_id, requestor=ip, task=task,
-                             input_path=input_dir, group_name=group,  config1=config1, config2=config2)
+    def insert_newcommand(cls, job_id, exodus_job_id, task_id):
+        q = BaseQuery.insert('command', job_id=job_id, task_id=task_id, exodus_job_id=exodus_job_id)
         result = DBLayer.queryWorker('insert', q)
 
+    @classmethod
+    def insert_tracker_info(cls, job_id, tracker_ip, stream_url):
+        q = BaseQuery.insert('tracker_info', job_id=job_id, tracker_ip=tracker_ip, stream_url=stream_url)
+        result = DBLayer.queryWorker('insert', q)
 
+'''
     @classmethod
     def getJobStatus(cls, id):
         q = cls.sql_list['query_status'] + str(id)

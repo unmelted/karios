@@ -43,7 +43,7 @@ class Consumer() :
 		print("received message : ", body)
 		self.channel.basic_ack(delivery_tag=method.delivery_tag)
 
-	# def consume(self) :
+	def consume(self) :
 		self.channel.start_consuming()
 	
 	def close(self) :
