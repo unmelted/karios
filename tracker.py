@@ -136,7 +136,7 @@ class TrackerGroup() :
 			print(tracker.stream_url)
 
 			if tracker.step == 'READY_OK' :
-				self.msg_que.put((tr.getUrl('start'), 'PUT', none, tr.callback))
+				self.msg_que.put((tracker.getUrl('start'), 'PUT', None, 'start', self.job_id, tracker.camera_id))
 				start_cnt += 1
 			else :
 				status = -102

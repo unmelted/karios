@@ -28,11 +28,13 @@ class TrackerStock() :
 	storage = {}
 
 	def store(self, key, instance ):
+		key = str(key)		
 		self.storage[key] = instance 
 		print("store : ", key)
-		print(self.storage)
+		print(self.storage[key])
 
 	def revmoe (self, key) :
+		key = str(key)
 		if key in self.storage:
 			del self.storage[key]
 		else :
@@ -40,8 +42,9 @@ class TrackerStock() :
 
 	def get_instance(self, key) :
 		print("get instance : ", key)
-		print(self.storage)
-		return self.storage.get(key)
+		key = str(key)
+		print(self.storage[key])
+		return self.storage[key]
 
 
 class Commander(metaclass=Singleton) :
@@ -127,15 +130,7 @@ class Commander(metaclass=Singleton) :
 		elif category == rc.TRACKER_START :
 
 			trcks = self.trck_q.get_instance(job_id)
-			for trck in trcks.trackers :
-				print("inner for ", trck.task_id)
-
-				if (job_id == trck.job_id) :
-					result, status = trck.start()
-
-			else :
-				result = 0
-				status = -101
+			result, status = trcks.start()
 		
 
 		l.get().w.debug("task processor end  cateory {} job_id {}".format(category, job_id))		
