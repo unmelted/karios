@@ -37,7 +37,7 @@ class Consumer() :
 	def getIpAddress(self) :
 		hostname = socket.gethostname()
 		self.ip_addr = socket.gethostbyname(hostname)
-		print("My ip address is : ", self.ip_addr)
+
 
 	def callback(self, method, properties, body) :
 		print("received message : ", body)

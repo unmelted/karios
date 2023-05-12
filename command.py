@@ -1,15 +1,18 @@
 import os
 import time
-from multiprocessing import Queue
+from multiprocessing import Process, Queue
+import threading
 import requests
 import json
 import asyncio
+from queue import Empty
 
 from logger import Logger as l
 from task import TaskActivity
 from db_manager import DbManager
 from define import RequestCategory as rc
 from tracker import TrackerGroup
+
 
 class Singleton(type):
     _instances = {}
@@ -19,17 +22,65 @@ class Singleton(type):
             cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
 
+
+class TrackerStock() :
+
+	storage = {}
+
+	def store(self, key, instance ):
+		self.storage[key] = instance 
+		print("store : ", key)
+		print(self.storage)
+
+	def revmoe (self, key) :
+		if key in self.storage:
+			del self.storage[key]
+		else :
+			print(f"There is no key in storage '{key}'")
+
+	def get_instance(self, key) :
+		print("get instance : ", key)
+		print(self.storage)
+		return self.storage.get(key)
+
+
 class Commander(metaclass=Singleton) :
 	
 	cmd_q = Queue()
 	msg_q = Queue()
-	trck_q = []
+	task_stock = {}
+	trck_q = TrackerStock()
 
-	def get_cmdq(self) :
-		return self.cmd_q
+	def start_commander(self) :
+		print("start_commander ---------------------")
 
-	def get_msgq(self) :
-		return self.msg_q
+		def receiver_msg() :
+			while True :
+				time.sleep(0.3)
+				print(".")
+
+				if (self.msg_q.empty() is False) :
+					url, type, data, job_type, job_id, cam_id = self.msg_q.get()
+					print(url)
+					print("msg_q receive data : ", json.dumps(data))
+
+					# if type == 'POST' :
+					# 	response = requests.post(url, json=data)
+					# elif type == 'PUT':
+					# 	response = requests.put(url)
+					# elif type == 'GET' :
+					# 	response = requests.get(url)
+
+					# json_response = response.json()				
+					json_response = {'error_code': 2000, 'error_msg': 'success', 'status': 'ready'}				
+					print("response success: ", json_response)				
+					# callback(job_type, cam_id, json_response)
+					self.msg_callback(job_type, job_id, cam_id, json_response)
+
+		thread = threading.Thread(target=receiver_msg)
+		thread.start()
+		print("commander end")
+
 
 	def add_task(self, category, task):
 		print("commander add task is called ", category, task)
@@ -59,50 +110,6 @@ class Commander(metaclass=Singleton) :
 		self.cmd_q.put((url, data))
 
 
-	def receiver(self) :
-
-		while True :
-			time.sleep(0.3)
-
-			if (self.cmd_q.empty() is False) :
-				category, task, job_id = self.cmd_q.get()
-				self.processor(category, task, job_id)
-
-
-
-	def request_query(self, category, job_id) :
-		print("commander receive query ", category, job_id)
-		print("trck_q sizse : ", len(self.trck_q))
-
-		result = None
-		status = None
-
-		return self.processor(category, None, job_id)
-	'''
-		if category == rc.TRACKER_START :
-			print("tracker start.. ", self.trck_q)
-
-			if len(self.trck_q) > 0 :
-				for trck in self.trck_q :
-					if (job_id == trck.job_id) :
-						print("matched job id is : ", job_id, trck.job_id)
-				result = 0
-				status = 100
-
-			else :
-				result = 0
-				status = -101
-
-		elif category == rc.TRACKER_STOP :
-			pass
-
-		elif category == rc.TRACKER_FINISH :
-			pass
-
-		return result, status
-	'''
-
-
 	def processor(self, category, task, job_id) :
 		result = 0 
 		status = 0
@@ -112,21 +119,19 @@ class Commander(metaclass=Singleton) :
 		if category == rc.TRACKER_READY :
 			trackers = TrackerGroup(self.msg_q, task['task_id'], job_id)
 			trackers.prepare(task)
-			self.trck_q.append(trackers)
-			print("add trck_q sizse : ", id(self.trck_q), len(self.trck_q))			
 			DbManager.insert_newcommand(job_id, 0, task['task_id'])
+			self.trck_q.store(job_id, trackers)			
+			# self.trck_q.append(trackers)
+
 
 		elif category == rc.TRACKER_START :
 
-			if len(self.trck_q) > 0 :
-				for trck in self.trck_q :
-					print("inner for ", trck.task_id)
-					if (job_id == trck.task_id) :
-						print("matched job id is : ", job_id, trck.task_id)
-						trck.start()
+			trcks = self.trck_q.get_instance(job_id)
+			for trck in trcks.trackers :
+				print("inner for ", trck.task_id)
 
-				result = 0
-				status = 100
+				if (job_id == trck.job_id) :
+					result, status = trck.start()
 
 			else :
 				result = 0
@@ -136,24 +141,14 @@ class Commander(metaclass=Singleton) :
 		l.get().w.debug("task processor end  cateory {} job_id {}".format(category, job_id))		
 		return result, status
 
+	
+	def msg_callback(self, type, job_id, camera_id, data) :
+		print("recive message callback " , type, camera_id, data)
+		trcks = self.trck_q.get_instance(job_id)
 
-	async def receiver_msg(self) :
-
-		while True :
-			time.sleep(0.3)
-
-			if (self.msg_q.empty() is False) :
-				url, data, callback = self.msg_q.get()
-				print(url)
-				print("msg_q receive data : ", json.dumps(data))
-				print(callback)
-
-				response = requests.post(url, json=data)
-
-				if response.status_code == 200:
-					print("response success: ", response)
-					json_response = response.json()				
-					callback(json_response)
-
-				else : 
-					print("response error : ", response)
+		# for trcks in self.trck_q :
+			# if trcks.job_id == job_id :
+		for trck in trcks.trackers : 
+			if trck.camera_id == camera_id :
+				print("match . process... ")
+				trck.step = 'READY_OK'

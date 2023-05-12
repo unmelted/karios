@@ -1,6 +1,6 @@
 import os
 
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Manager
 from flask import Flask
 from flask import request, jsonify
 from flask_restx import fields, Resource, Api, reqparse, marshal
@@ -60,6 +60,7 @@ class Start(Resource) :
             'result' : result,
             'message' : msg
         }
+        print("will return to server : ", status, result)
 
         return result
 
@@ -80,7 +81,22 @@ class Stop(Resource) :
 
         return result
   
+@api.route('/kairos/destroy/<job_id>')
+@api.doc()
+class Destroy(Resource) :
+    def put(self, job_id=job_id):
+        
+        result, status = Commander().add_task(rc.TRACKER_FINISH, job_id)
+        msg = defn.get_err_msg(status)
 
+        result = {
+            'status' : status,
+            'result' : result,
+            'message' : msg
+        }
+
+        return result
+        
 @api.route('/kairos/status/<job_id>')
 @api.doc()
 class GetStatus(Resource) :
@@ -111,11 +127,9 @@ class GetVersion(Resource) :
 if __name__ == '__main__':
     np = NewPool()
     DBLayer.initialize(np.getConn())
-    
-    mr = Process(target=Commander().receiver_msg)    
-    jr = Process(target=TaskManager.Watcher)
 
-    mr.start()
+    Commander().start_commander()
+    jr = Process(target=TaskManager.Watcher)
     jr.start()
 
     app.run(debug=False, host='0.0.0.0', port=9001)

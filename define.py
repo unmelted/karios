@@ -24,6 +24,9 @@ class Definition(object) :
 	tracker_name = '/kronos'
 	tracker_port = 7890
 
+	backend_url = '10.82.5.119'
+	backend_port = 4000
+
 
 	def get_version(self):
 		return VERSION
@@ -47,6 +50,8 @@ def get_err_msg(err_code) :
         -25: "Canceled Job",
 
 		-101: "There is no prepared Multitracker Job",
+		-102: "Not all tracker is ready. Partially started.",
+		-103: "Can't stop some trackers"
 	}
 
 	if err_code in msg_pair :
