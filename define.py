@@ -51,7 +51,9 @@ def get_err_msg(err_code) :
 
 		-101: "There is no prepared Multitracker Job",
 		-102: "Not all tracker is ready. Partially started.",
-		-103: "Can't stop some trackers"
+		-103: "Can't stop some trackers.",
+		-104: "There is no stop-able trackers.",
+		-105: "There is no ready trackers",
 	}
 
 	if err_code in msg_pair :

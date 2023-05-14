@@ -38,6 +38,10 @@ class DbManager(BaseQuery):
         q = BaseQuery.insert('tracker_info', job_id=job_id, tracker_ip=tracker_ip, stream_url=stream_url)
         result = DBLayer.queryWorker('insert', q)
 
+    @classmethod
+    def update_tracker_info(cls, job_id, tracker_ip, type, data) :
+        pass
+
 '''
     @classmethod
     def getJobStatus(cls, id):

@@ -77,12 +77,11 @@ class Commander(metaclass=Singleton) :
 					# json_response = response.json()				
 					json_response = {'error_code': 2000, 'error_msg': 'success', 'status': 'ready'}				
 					print("response success: ", json_response)				
-					# callback(job_type, cam_id, json_response)
+
 					self.msg_callback(job_type, job_id, cam_id, json_response)
 
 		thread = threading.Thread(target=receiver_msg)
 		thread.start()
-		print("commander end")
 
 
 	def add_task(self, category, task):
@@ -103,7 +102,7 @@ class Commander(metaclass=Singleton) :
 				result = None
 				status =  -22
 
-		elif category == rc.TRACKER_START :
+		elif category > rc.TRACKER_READY :
 			result, status = self.processor(category, None, task)
 
 		return result, status
@@ -128,10 +127,16 @@ class Commander(metaclass=Singleton) :
 
 
 		elif category == rc.TRACKER_START :
-
 			trcks = self.trck_q.get_instance(job_id)
 			result, status = trcks.start()
-		
+
+		elif category == rc.TRACKER_STOP :
+			trcks = self.trck_q.get_instance(job_id)
+			result, status = trcks.stop()
+
+		elif category == rc.TRACKER_STATUS :			
+			trcks = self.trck_q.get_instance(job_id)
+			result, status = trcks.status()
 
 		l.get().w.debug("task processor end  cateory {} job_id {}".format(category, job_id))		
 		return result, status
@@ -141,9 +146,35 @@ class Commander(metaclass=Singleton) :
 		print("recive message callback " , type, camera_id, data)
 		trcks = self.trck_q.get_instance(job_id)
 
-		# for trcks in self.trck_q :
-			# if trcks.job_id == job_id :
 		for trck in trcks.trackers : 
 			if trck.camera_id == camera_id :
-				print("match . process... ")
-				trck.step = 'READY_OK'
+				trck.err_code = data['error_code']
+				trck.err_msg = data['error_msg']
+
+				if type == 'setinfo':					
+					print("set info OK")
+					if trck.err_code == 2000:
+						trck.step = 'READY_OK'
+					else :
+						trck.step = 'READY_FAIL'						
+					break
+				elif type == 'start' :
+					print("start OK")
+					if trck.err_code == 2000:					
+						trck.step = 'START_OK'
+					else :
+						trck.step = 'START_FAIL'						
+					break
+
+				elif type == 'stop' :
+					print("stop  OK")
+					if trck.err_code == 2000:					
+						trck.step = 'STOP_OK'
+					else :
+						trck.step = 'STOP_FAIL'
+					break
+				elif type == 'status' :
+					print("status  OK ", data['status'])
+					trck.status = data['status']
+					break
+				

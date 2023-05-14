@@ -53,39 +53,11 @@ class Tracker() :
 			url = self.send_url + '/start'
 		elif type == 'stop' :
 			url = self.send_url + '/stop'
+		elif type == 'status' :
+			url = self.send_url + '/status'
 
 		return url
 	
-	# def callback(self, url, data) :
-	# 	print(" Tracker Callback is called  ", url)
-	# 	print(self)
-
-	# 	if url == self.getUrl('setinfo') :
-	# 		if data['status'] == 'ready': 
-	# 			self.step = 'READY_OK'				
-	# 			print("target tracker cam id : " , self.camera_id)
-	# 			self.camera_id = 'TEST_ID'
-	# 		else : 
-	# 			self.step = 'READY_FAIL'
-
-	# 	elif url == selfg.getUrl('start') :
-	# 		if data['status'] == 'start': 			
-	# 			self.step = 'START_OK'
-	# 		else :
-	# 			self.step = 'START_FAIL'
-
-	# 	elif url == self.getUrl('stop') :
-	# 		print("stop callback .. ", data)			
-	# 		if data['status'] == 'stop':
-	# 			self.step = 'STOP_OK'
-	# 		else :
-	# 			self.step = 'STOP_FAIL'
-
-	# 	self.err_code = data['error_code']
-	# 	self.err_msg = data['error_msg']				
-	# 	print("changed step : ", self.step, self.camera_id)
-	# 	print(self)
-
 
 class TrackerGroup() :
 
@@ -142,7 +114,7 @@ class TrackerGroup() :
 				status = -102
 
 		if start_cnt == 0 and status == -102 :
-			status = -101
+			status = -105
 		
 		print("start return ", result, status)
 		return result, status
@@ -153,13 +125,13 @@ class TrackerGroup() :
 		stop_cnt = 0
 		for tracker in self.trackers :
 			if tracker.step == 'START_OK' : 
-				self.msg_que.put((tr.getUrl('stop'), 'PUT', none, tr.callback))
+				self.msg_que.put((tr.getUrl('stop'), 'PUT', None, 'stop', self.job_id, tracker.camera_id))
 				stop_cnt += 1
 			else :
 				status = -103
 
 			if stop_cnt == 0 and status == -103:
-				status = -101	
+				status = -104
 
 		return result, status
 
@@ -169,7 +141,6 @@ class TrackerGroup() :
 		status = 0
 
 		for tracker in self.tracker :
-			if tracker.step == 'START_OK' :
-				self.msg_que.put((tr.getUrl('start'), 'GET', none, tr.callback))
+			self.msg_que.put((tr.getUrl('status'), 'GET', None, 'status', self.job_id, tracker.camera_id))
 
 		return result, status
