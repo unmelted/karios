@@ -27,6 +27,8 @@ class Definition(object) :
 	backend_url = '10.82.5.119'
 	backend_port = 4000
 
+	prefix = 'kairos_'
+
 
 	def get_version(self):
 		return VERSION

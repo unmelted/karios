@@ -58,26 +58,42 @@ class Commander(metaclass=Singleton) :
 		print("start_commander ---------------------")
 
 		def receiver_msg() :
+			internal = True
+
 			while True :
 				time.sleep(0.3)
-				print(".")
+				# print(".")
 
 				if (self.msg_q.empty() is False) :
 					url, type, data, job_type, job_id, cam_id = self.msg_q.get()
 					print(url)
 					print("msg_q receive data : ", json.dumps(data))
 
-					# if type == 'POST' :
-					# 	response = requests.post(url, json=data)
-					# elif type == 'PUT':
-					# 	response = requests.put(url)
-					# elif type == 'GET' :
-					# 	response = requests.get(url)
+					if type == 'POST' :
+						if internal == True :
+							json_response = {'error_code': 2000, 'error_msg': 'success', 'status': 'ready'}
+						else : 
+							response = requests.post(url, json=data)
 
-					# json_response = response.json()				
-					json_response = {'error_code': 2000, 'error_msg': 'success', 'status': 'ready'}				
+					elif type == 'PUT':
+						if internal == True :
+							if job_type == 'start' : 
+								json_response = {'error_code': 2000, 'error_msg': 'success', 'status': 'start'}
+							else :
+								json_response = {'error_code': 2000, 'error_msg': 'success', 'status': 'stop'}
+						else : 
+							response = requests.put(url)
+
+					elif type == 'GET' :
+						if internal == True :						
+							json_response = {'error_code': 2000, 'error_msg': 'success', 'status': 'stop'}
+						else : 
+							response = requests.get(url)							
+
+					if internal == False :
+						json_response = response.json()
+
 					print("response success: ", json_response)				
-
 					self.msg_callback(job_type, job_id, cam_id, json_response)
 
 		thread = threading.Thread(target=receiver_msg)
@@ -162,6 +178,7 @@ class Commander(metaclass=Singleton) :
 					print("start OK")
 					if trck.err_code == 2000:					
 						trck.step = 'START_OK'
+						trcks.rabbit.start()
 					else :
 						trck.step = 'START_FAIL'						
 					break
@@ -170,6 +187,7 @@ class Commander(metaclass=Singleton) :
 					print("stop  OK")
 					if trck.err_code == 2000:					
 						trck.step = 'STOP_OK'
+						trcks.rabbit.stop()						
 					else :
 						trck.step = 'STOP_FAIL'
 					break

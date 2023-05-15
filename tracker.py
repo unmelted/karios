@@ -66,12 +66,17 @@ class TrackerGroup() :
 	task_id = None
 	trackers = []
 	rabbit = None
+	table_name1 = None
+	table_name2 = None
 
 	def __init__ (self, que, task_id, job_id):
+		print(" ################  trackerGroup init is called ")		
 		self.task_id = task_id
 		self.job_id = job_id
 		self.msg_que = que
 		self.rabbit = Consumer(job_id)
+		self.table_name1 = defn.prefix+ str(self.job_id) + '_result'
+		self.table_name2 = defn.prefix+ str(self.job_id) + '_3d'
 
 	
 	def prepare(self, task) :
@@ -88,6 +93,7 @@ class TrackerGroup() :
 			print(tr)
 			self.trackers.append(tr)
 			DbManager.insert_tracker_info(self.job_id, tr.tracker_ip, tr.stream_url)
+			DbManager.create_result_table(self.table_name1, self.table_name2)
 
 			msg = Messages.assemble_info_msg('setinfo', (tr, self.rabbit.getResultQueInfo()))
 			self.msg_que.put((tr.getUrl('setinfo'), 'POST', msg, 'setinfo', self.job_id, tr.camera_id))
@@ -125,7 +131,7 @@ class TrackerGroup() :
 		stop_cnt = 0
 		for tracker in self.trackers :
 			if tracker.step == 'START_OK' : 
-				self.msg_que.put((tr.getUrl('stop'), 'PUT', None, 'stop', self.job_id, tracker.camera_id))
+				self.msg_que.put((tracker.getUrl('stop'), 'PUT', None, 'stop', self.job_id, tracker.camera_id))
 				stop_cnt += 1
 			else :
 				status = -103
