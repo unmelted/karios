@@ -58,7 +58,7 @@ class Commander(metaclass=Singleton) :
 		print("start_commander ---------------------")
 
 		def receiver_msg() :
-			internal = True
+			internal = False
 
 			while True :
 				time.sleep(0.3)
@@ -139,7 +139,6 @@ class Commander(metaclass=Singleton) :
 			trackers.prepare(task)
 			DbManager.insert_newcommand(job_id, 0, task['task_id'])
 			self.trck_q.store(job_id, trackers)			
-			# self.trck_q.append(trackers)
 
 
 		elif category == rc.TRACKER_START :

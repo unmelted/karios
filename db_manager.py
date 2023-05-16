@@ -39,8 +39,8 @@ class DbManager(BaseQuery):
         
         result = DBLayer.queryWorker('create', query)
 
-        query = f"CREATE TABLE IF NOT EXISTS {table_name2} (frame_id INTEGER PRIMARY KEY NOT NULL, object_id TEXT, team TEXT, x REAL, y REAL, width REAL, height REAL, detail TEXT)"
-        
+        query = f"CREATE TABLE IF NOT EXISTS {table_name2} (no SERIAL, frame_id INTEGER PRIMARY KEY NOT NULL, object_id TEXT, team TEXT, x REAL, y REAL, width REAL, height REAL, detail TEXT)"
+
         result = DBLayer.queryWorker('create', query)
         
 

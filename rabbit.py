@@ -38,14 +38,15 @@ class MQConnection():
 		print("Received message:", properties)
 		json_body = json.loads(body)
 		print(json_body)
+		print(type(json_body))
 		# json_prop = json.loads(properties.headers)
-		print(properties.headers)
-		print(properties.headers['from_id'])
+		# print(properties.headers)
+		# print(properties.headers['from_id'])
 		DbManager.insert_que_result(self.table_name, 
 									properties.headers['frame_id'], 
 									properties.headers['camera_id'],
 									properties.headers['from_id'],
-									json_body)
+									json_body['objects'])
 
 		self.channel.basic_ack(delivery_tag=method.delivery_tag)
 
@@ -102,8 +103,8 @@ class Consumer() :
 		print("rabbit mq receive consume start..")
 		self.thread_consumer = threading.Thread(target=self.mq.start)
 		self.thread_consumer.start()
-		time.sleep(1)		
-		self.produce_msg()
+		# # time.sleep(1)		
+		# self.produce_msg()
 	
 	def stop(self) :
 		if self.thread_producer != None :
