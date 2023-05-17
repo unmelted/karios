@@ -33,6 +33,7 @@ class Tracker() :
 	camera_id = None
 	stream_url = None
 	send_url = None
+	calib_job_id = None
 
 
 	def set_data(self, tracker_ip, camera_id, stream_url) :
@@ -75,7 +76,7 @@ class TrackerGroup() :
 		self.job_id = job_id
 		self.msg_que = que
 		self.rabbit = Consumer(job_id)
-		self.table_name1 = defn.prefix+ str(self.job_id) + '_result'
+		self.table_name1 = defn.prefix+ str(self.job_id)
 		self.table_name2 = defn.prefix+ str(self.job_id) + '_3d'
 
 	

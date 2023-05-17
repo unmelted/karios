@@ -37,9 +37,8 @@ class MQConnection():
 	def on_message(self, channel, method, properties, body):
 		print("Received message:", properties)
 		json_body = json.loads(body)
-		print(json_body)
-		print(type(json_body))
-		# json_prop = json.loads(properties.headers)
+		# print(json_body)
+		# print(type(json_body ))
 		# print(properties.headers)
 		# print(properties.headers['from_id'])
 		DbManager.insert_que_result(self.table_name, 
@@ -72,7 +71,7 @@ class Consumer() :
 	def __init__(self, job_id):
 		self.job_id = str(job_id)		
 		self.queue_name = defn.prefix + self.job_id
-		self.table_name1 = defn.prefix+ self.job_id + '_result'		
+		self.table_name1 = defn.prefix+ self.job_id	
 		self.credentials = pika.PlainCredentials('replay', '1234')		
 
 		self.param = pika.ConnectionParameters('localhost', self.queue_port, '/', self.credentials)

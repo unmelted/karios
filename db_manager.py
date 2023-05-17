@@ -56,12 +56,11 @@ class DbManager(BaseQuery):
     @classmethod
     def insert_que_result(cls, table_name, frame_id, camera_id, from_id, objects) :
         print("insert que result .." , table_name, frame_id, camera_id, from_id)
-        print(type(objects))
+
         for obj in objects : 
             q = BaseQuery.insert(table_name, frame_id=frame_id, camera_id=camera_id, from_id=from_id, object_id=obj['id'],
             confidence=0.0, team=obj['team'], x=float(obj['x']), y=float(obj['y']), width=float(obj['width']), height=float(obj['height']))
 
-            print("query : ", q)
             result = DBLayer.queryWorker('insert', q)
 
 
