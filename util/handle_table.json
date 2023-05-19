@@ -1,7 +1,7 @@
 {
 	"create_command": "CREATE TABLE IF NOT EXISTS command (no SERIAL PRIMARY KEY NOT NULL, datetime TIMESTAMP DEFAULT NOW(), job_id INTEGER NOT NULL, task_id TEXT, exodus_job_id INTEGER, event_id TEXT, config1 TEXT, config2 TEXT, status INTEGER , result_id INTEGER, result_msg TEXT);",
 	"create_task_manager": "CREATE TABLE IF NOT EXISTS job_manager (job_id INTEGER PRIMARY KEY, pid TEXT, cancel TEXT, cancel_date TIMESTAMP, complete TEXT, complete_date TIMESTAMP);",
-	"create_tracker": "CREATE TABLE IF NOT EXISTS tracker_info (job_id INTEGER, datetime TIMESTAMP DEFAULT NOW(), tracker_ip TEXT, stream_url  TEXT, status TEXT, error TEXT, finish TIMESTAMP, PRIMARY KEY (job_id , tracker_ip));",
+	"create_tracker": "CREATE TABLE IF NOT EXISTS tracker_info (job_id INTEGER, datetime TIMESTAMP DEFAULT NOW(), tracker_ip TEXT, stream_url  TEXT, group_name TEXT, calib_job_id TEXT, status TEXT, error TEXT, finish TIMESTAMP, PRIMARY KEY (job_id , tracker_ip));",
 	"create_event1": "CREATE TABLE IF NOT EXISTS $(table_name_1) (frame_id INTEGER PRIMARY KEY NOT NULL, createdate TIMESTAMP DEFAULT NOW(), camera_id TEXT, from_id TEXT, object_id TEXT, confidence REAL, team TEXT, x REAL, y REAL, width REAL, height REAL, detail TEXT);",
 	"create_event2": "CREATE TABLE IF NOT EXISTS $(table_name_2) (frame_id INTEGER PRIMARY KEY NOT NULL, object_id TEXT, team TEXT, x REAL, y REAL, width REAL, height REAL, detail TEXT);",
 	"query_task_id": "SELECT job_id FROM command ORDER BY task_id DESC",

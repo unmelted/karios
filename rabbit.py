@@ -1,4 +1,5 @@
 import os
+import multiprocessing
 import time
 import json
 import pika
@@ -37,7 +38,7 @@ class MQConnection():
 	def on_message(self, channel, method, properties, body):
 		print("Received message:", properties)
 		json_body = json.loads(body)
-		# print(json_body)
+		print(json_body)
 		# print(type(json_body ))
 		# print(properties.headers)
 		# print(properties.headers['from_id'])
@@ -62,21 +63,27 @@ class Consumer() :
 	ip_addr = None
 	queue_port = 5672
 	channel = None
+	consumer_count = 0
 
 	thread_producer = None
-	threahd_consumer = None
+	mqs = []
+	consumers = []
 
 	run_flag = True
 
-	def __init__(self, job_id):
-		self.job_id = str(job_id)		
+	def __init__(self, job_id, count):
+		self.job_id = str(job_id)
+		self.consumer_count = count
+
 		self.queue_name = defn.prefix + self.job_id
 		self.table_name1 = defn.prefix+ self.job_id	
 		self.credentials = pika.PlainCredentials('replay', '1234')		
 
 		self.param = pika.ConnectionParameters('localhost', self.queue_port, '/', self.credentials)
-		self.mq = MQConnection(self.param, self.queue_name, self.table_name1)
-		self.mq.ready()
+		mq = MQConnection(self.param, self.queue_name, self.table_name1)
+		mq.ready()
+		self.mqs.append(mq)
+
 		self.getIpAddress()
 
 
@@ -99,19 +106,30 @@ class Consumer() :
 
 
 	def start(self) :
-		print("rabbit mq receive consume start..")
-		self.thread_consumer = threading.Thread(target=self.mq.start)
-		self.thread_consumer.start()
-		# # time.sleep(1)		
-		# self.produce_msg()
+
+		print("rabbit mq receive consume start . create processing : ", self.consumer_count)
+		for i in range(self.consumer_count) :
+			consumer = multiprocessing.Process(target=self.mqs[i].start)
+			consumer.start()			
+			self.consumers.append(consumer)
+
+		#threading method
+		# self.thread_consumer = threading.Thread(target=self.mq.start)
+		# self.thread_consumer.start()
+
+		time.sleep(1) # if you want self producing, enalbe this.
+		self.produce_msg()
 	
 	def stop(self) :
 		if self.thread_producer != None :
 			self.run_flag = False
 			self.thread_producer.join()
 
-		if self.thread_consumer != None :
-			self.mq.stop()
+		for mq in self.mqs :
+			mq.stop()
+
+		for consumer in self.consumers :
+			consumer.join()
 
 
 	def close(self) :
@@ -139,7 +157,7 @@ class Consumer() :
 				custom_headers = {"from_id" : "10.82.5.148", "camera_id" : cam_index, "frame_id" :frame_id}
 				properties = pika.BasicProperties(headers=custom_headers)
 
-				msgs = [{ "id" : 10, "x": 0.0526, "y": 0.125, "width": 0.1875, "height": 0.427, "conf" : 0.0, "team" : 'None'}, { "id" : 20, "x": 0.0626, "y": 0.4, "width": 0.33, "height": 0.31, "conf" : 0.0, "team" : 'None'}]
+				msgs = {"objects" : [{ "id" : 10, "x": 0.0526, "y": 0.125, "width": 0.1875, "height": 0.427, "conf" : 0.0, "team" : 'None'}, { "id" : 20, "x": 0.0626, "y": 0.4, "width": 0.33, "height": 0.31, "conf" : 0.0, "team" : 'None'}]}
 
 				json_msg = json.dumps(msgs)
 				print(json_msg)

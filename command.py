@@ -3,6 +3,7 @@ import time
 from multiprocessing import Process, Queue
 import threading
 import requests
+from requests.exceptions import RequestException
 import json
 import asyncio
 from queue import Empty
@@ -58,7 +59,7 @@ class Commander(metaclass=Singleton) :
 		print("start_commander ---------------------")
 
 		def receiver_msg() :
-			internal = False
+			internal = True
 
 			while True :
 				time.sleep(0.3)
@@ -67,37 +68,41 @@ class Commander(metaclass=Singleton) :
 				if (self.msg_q.empty() is False) :
 					url, type, data, job_type, job_id, cam_id = self.msg_q.get()
 					print(url)
-					print("msg_q receive data : ", json.dumps(data))
 
-					if type == 'POST' :
-						if internal == True :
-							json_response = {'error_code': 2000, 'error_msg': 'success', 'status': 'ready'}
+
+					if internal == True :
+						json_response = {'error_code': 2000, 'error_msg': 'success', 'status': job_type}
+					else : 
+						response = self.request_processor(url, type, data)
+						if response == -1 :
+							json_response = {'error_code': -201, 'error_msg': 'fail', 'status': ''}
 						else : 
-							response = requests.post(url, json=data)
-
-					elif type == 'PUT':
-						if internal == True :
-							if job_type == 'start' : 
-								json_response = {'error_code': 2000, 'error_msg': 'success', 'status': 'start'}
-							else :
-								json_response = {'error_code': 2000, 'error_msg': 'success', 'status': 'stop'}
-						else : 
-							response = requests.put(url)
-
-					elif type == 'GET' :
-						if internal == True :						
-							json_response = {'error_code': 2000, 'error_msg': 'success', 'status': 'stop'}
-						else : 
-							response = requests.get(url)							
-
-					if internal == False :
-						json_response = response.json()
+							json_response = response.json()
 
 					print("response success: ", json_response)				
 					self.msg_callback(job_type, job_id, cam_id, json_response)
 
 		thread = threading.Thread(target=receiver_msg)
 		thread.start()
+
+	def request_processor(self, url, type, data) :
+
+		print('request_processor .. : ', url, type, data)
+		response = -1
+		try:
+			if type == 'POST':
+				response = requests.post(url, json=data)								
+
+			elif type == 'PUT' :
+				response = requests.put(url, json=data)								
+
+			elif type == 'GET' :
+				response = requests.get(url, json=data)
+
+		except RequestException as e:
+			print("request error .. ", str(e))
+
+		return response 
 
 
 	def add_task(self, category, task):
@@ -167,15 +172,15 @@ class Commander(metaclass=Singleton) :
 				trck.err_msg = data['error_msg']
 
 				if type == 'setinfo':					
-					print("set info OK")
 					if trck.err_code == 2000:
+						print("set info OK")						
 						trck.step = 'READY_OK'
 					else :
 						trck.step = 'READY_FAIL'						
 					break
 				elif type == 'start' :
-					print("start OK")
-					if trck.err_code == 2000:					
+					if trck.err_code == 2000:
+						print("start OK")						
 						trck.step = 'START_OK'
 						trcks.rabbit.start()
 					else :
@@ -183,8 +188,8 @@ class Commander(metaclass=Singleton) :
 					break
 
 				elif type == 'stop' :
-					print("stop  OK")
-					if trck.err_code == 2000:					
+					if trck.err_code == 2000:
+						print("stop  OK")						
 						trck.step = 'STOP_OK'
 						trcks.rabbit.stop()						
 					else :

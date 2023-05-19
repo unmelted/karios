@@ -75,13 +75,14 @@ class TrackerGroup() :
 		self.task_id = task_id
 		self.job_id = job_id
 		self.msg_que = que
-		self.rabbit = Consumer(job_id)
 		self.table_name1 = defn.prefix+ str(self.job_id)
 		self.table_name2 = defn.prefix+ str(self.job_id) + '_3d'
 
 	
 	def prepare(self, task) :
 
+		self.rabbit = Consumer(self.job_id, len(task['tracker']))
+		
 		for tracker in task['tracker']:
 			print("prepare for eache : ", tracker)
 			obj = tracker.replace('\'', '\"')

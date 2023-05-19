@@ -38,7 +38,7 @@ def get_err_msg(err_code) :
 	msg = None
 	msg_pair = {
         0: "ERR NONE",
-        100: "Comeplete",
+        100: "Complete",
         200: "Complete",
 
         -1: "PROC ERR",
@@ -56,6 +56,8 @@ def get_err_msg(err_code) :
 		-103: "Can't stop some trackers.",
 		-104: "There is no stop-able trackers.",
 		-105: "There is no ready trackers",
+
+		-201: "Some Exception Error is occurred during requests.",
 	}
 
 	if err_code in msg_pair :
