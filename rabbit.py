@@ -140,7 +140,7 @@ class Consumer() :
 		for consumer in self.consumers :
 			print("stop consumer processing ------  ", consumer)
 			try : 
-				consumer.terminate()z
+				consumer.terminate()
 				print("terminate ok")
 
 			except psutil.NoSuchProcess :

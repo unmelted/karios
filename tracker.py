@@ -4,6 +4,7 @@ import json
 import threading
 from enum import Enum
 
+from logger import Logger as l
 from define import Definition as defn
 from messages import *
 from rabbit import Consumer
@@ -36,18 +37,21 @@ class Tracker() :
 	calib_job_id = None
 
 
-	def set_data(self, tracker_ip, camera_id, stream_url) :
-		print("tracker () set is called () ")
+	def set_data(self, tracker_ip, camera_id, stream_url, calib_job_id) :
+
 		self.step = 'CREATED'
 		self.tracker_ip = tracker_ip
 		self.camera_id = camera_id
 		self.stream_url = stream_url
 		self.send_url = 'http://'+self.tracker_ip+ ':'+ str(self.tracker_port) + self.tracker_name
-		print("my --------- ", self.send_url)
+		self.calib_job_id = calib_job_id
+
+		l.get().w.debug("Tracker set data ip {} stream_url {} calib_job_id {} ".format(
+			self.tracker_ip, self.stream_url, self.calib_job_id))
 
 	def getUrl(self, type) :
 		url = None
-		print("get url --- ", self.send_url)
+
 		if type == 'setinfo' :
 			url = self.send_url + '/setinfo'
 		elif type == 'start' :
@@ -69,9 +73,11 @@ class TrackerGroup() :
 	rabbit = None
 	table_name1 = None
 	table_name2 = None
+	calib_id = []
+	calib = None
 
 	def __init__ (self, que, task_id, job_id):
-		print(" ################  trackerGroup init is called ")		
+
 		self.task_id = task_id
 		self.job_id = job_id
 		self.msg_que = que
@@ -80,40 +86,48 @@ class TrackerGroup() :
 
 	
 	def prepare(self, task) :
-
+		result, status = 0, 0
 		self.rabbit = Consumer(self.job_id, len(task['tracker']))
-
+		self.calib = Calibration()
+		cal_id = []
 		for tracker in task['tracker']:
-			print("prepare for eache : ", tracker)
+
 			obj = tracker.replace('\'', '\"')
 			mobj = json.loads(obj)
-
+			print("Tracker add ", mobj)
 
 			tr = Tracker()
-			tr.set_data( mobj['tracker_ip'], mobj['camera_id'], mobj['stream_url'])
-			print("created tracker : ", tr.tracker_ip, tr.stream_url)
-			print(tr)
-			self.trackers.append(tr)
-			DbManager.insert_tracker_info(self.job_id, tr.tracker_ip, tr.stream_url)
-			DbManager.create_result_table(self.table_name1, self.table_name2)
+			if mobj['tracker_ip'] != '' and  mobj['camera_id'] != '' and  
+				mobj['stream_url'] != '' and mobj['calib_job_id'] != '':
 
-			msg = Messages.assemble_info_msg('setinfo', (tr, self.rabbit.getResultQueInfo()))
-			self.msg_que.put((tr.getUrl('setinfo'), 'POST', msg, 'setinfo', self.job_id, tr.camera_id))
+				tr.set_data( mobj['tracker_ip'], mobj['camera_id'], mobj['stream_url'], mobj['calib_job_id'])
+				cal_id.aooebd(mobj['calib_job_id'])
+				self.trackers.append(tr)
+				DbManager.insert_tracker_info(self.job_id, tr.tracker_ip, tr.stream_url)
+				DbManager.create_result_table(self.table_name1, self.table_name2)
 
-		print("prepare end : " , self.trackers)
+				msg = Messages.assemble_info_msg('setinfo', (tr, self.rabbit.getResultQueInfo()))
+				self.msg_que.put((tr.getUrl('setinfo'), 'POST', msg, 'setinfo', self.job_id, tr.camera_id))
+
+			else : 
+				result = -106
+
+		if (len(self.calib_id))> 0 :
+			self.calib_id = new Set(cal_id);
+		else :
+			result = -107
+
+		l.get().w.debug("TrackerGourp Prepare End. result {} ".format(result))
+		return result, status 
 
 
 
 	def start(self) :
-		print("Tracker Group start is called.. ")
+
 		result = 0
 		status = 0
 		start_cnt = 0
 		for tracker in self.trackers :
-			print("inner for tracker ... ", tracker.step)
-			print(tracker.camera_id)
-			print(tracker.tracker_ip)
-			print(tracker.stream_url)
 
 			if tracker.step == 'READY_OK' :
 				self.msg_que.put((tracker.getUrl('start'), 'PUT', None, 'start', self.job_id, tracker.camera_id))
@@ -124,7 +138,7 @@ class TrackerGroup() :
 		if start_cnt == 0 and status == -102 :
 			status = -105
 		
-		print("start return ", result, status)
+		l.get().w.debug("TrackerGourp Start result {} status {}. ".format(result, status))		
 		return result, status
 
 	def stop(self) :
@@ -132,7 +146,7 @@ class TrackerGroup() :
 		status = 0
 		stop_cnt = 0
 		for tracker in self.trackers :
-			print("tracker stop ... for loop, tracker.step : ", tracker.step)
+
 			if tracker.step == 'START_OK' : 
 				self.msg_que.put((tracker.getUrl('stop'), 'PUT', None, 'stop', self.job_id, tracker.camera_id))
 				stop_cnt += 1
@@ -142,6 +156,7 @@ class TrackerGroup() :
 			if stop_cnt == 0 and status == -103:
 				status = -104
 
+		l.get().w.debug("TrackerGourp Stop result {} status {}. ".format(result, status))		
 		return result, status
 
 	def destroy(self) :
@@ -153,15 +168,16 @@ class TrackerGroup() :
 		for tracker in self.trackers : 
 			self.trackers.remove(tracker)
 
+		l.get().w.debug("TrackerGourp Destroy result {} status {}. ".format(result, status))
 		return result, status 
 
 
 	def status(self) :
-		print("Tracker Group status check is called ")
 		result = 0
 		status = 0
 
 		for tracker in self.tracker :
 			self.msg_que.put((tr.getUrl('status'), 'GET', None, 'status', self.job_id, tracker.camera_id))
 
+		l.get().w.debug("TrackerGourp Status request send.")
 		return result, status

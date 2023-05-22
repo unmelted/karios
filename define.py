@@ -29,6 +29,9 @@ class Definition(object) :
 
 	prefix = 'kairos_'
 
+	exodus_ip = '10.82.5.119'
+	exodus_port = 9000
+
 
 	def get_version(self):
 		return VERSION
@@ -56,6 +59,8 @@ def get_err_msg(err_code) :
 		-103: "Can't stop some trackers.",
 		-104: "There is no stop-able trackers.",
 		-105: "There is no ready trackers",
+		-106: "Insufficient values for initialize TrackerGroup.",
+		-107: "There tracker set has no calibration data. Can't go on.",
 
 		-201: "Some Exception Error is occurred during requests.",
 		-202: "No process exception is occurred during Multiprocessor destroy.",

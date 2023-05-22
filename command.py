@@ -31,20 +31,19 @@ class TrackerStock() :
 	def store(self, key, instance ):
 		key = str(key)		
 		self.storage[key] = instance 
-		print("store : ", key)
-		print(self.storage[key])
+		l.get().w.debug("TrackerStock store key : {}".format(key))
 
 	def remove (self, key) :
 		key = str(key)
 		if key in self.storage:
 			del self.storage[key]
 		else :
-			print(f"There is no key in storage '{key}'")
+			l.get().w.debug("TrackerStock There is no key {}in storage. ".format(key))
+		l.get().w.debug("TrackerStock remove {} in storage. ".format( key))
 
 	def get_instance(self, key) :
-		print("get instance : ", key)
 		key = str(key)
-		print(self.storage[key])
+		l.get().w.debug("TrackerStock return instance {} in storage. ".format(key))
 		return self.storage[key]
 
 
@@ -56,7 +55,7 @@ class Commander(metaclass=Singleton) :
 	trck_q = TrackerStock()
 
 	def start_commander(self) :
-		print("start_commander ---------------------")
+		l.get().w.debug("Commander Start.")
 
 		def receiver_msg() :
 			internal = True
@@ -67,8 +66,8 @@ class Commander(metaclass=Singleton) :
 
 				if (self.msg_q.empty() is False) :
 					url, type, data, job_type, job_id, cam_id = self.msg_q.get()
-					print(url)
-
+					l.get().w.debug("Commander receive request url {} \n type {} \n job_type {} \n job_id {}".format(
+						url, type, job_type, job_id))
 
 					if internal == True :
 						json_response = {'error_code': 2000, 'error_msg': 'success', 'status': job_type}
@@ -79,7 +78,8 @@ class Commander(metaclass=Singleton) :
 						else : 
 							json_response = response.json()
 
-					print("response success: ", json_response)				
+
+					l.get().w.debug("Commander receive request response : {}".format(json_response))
 					self.msg_callback(job_type, job_id, cam_id, json_response)
 
 		thread = threading.Thread(target=receiver_msg)
@@ -87,7 +87,8 @@ class Commander(metaclass=Singleton) :
 
 	def request_processor(self, url, type, data) :
 
-		print('request_processor .. : ', url, type, data)
+		l.get().w.debug("Commander request_processor : {}".format(url))
+
 		response = -1
 		try:
 			if type == 'POST':
@@ -100,13 +101,13 @@ class Commander(metaclass=Singleton) :
 				response = requests.get(url, json=data)
 
 		except RequestException as e:
-			print("request error .. ", str(e))
+			l.get().w.error("Commander request_processor exception  : {}".format(str(e)))			
 
 		return response 
 
 
 	def add_task(self, category, task):
-		print("commander add task is called ", category, task)
+		l.get().w.debug("Commander add_task category: {}".format(category))
 
 		result = None
 		status = 0
@@ -128,22 +129,19 @@ class Commander(metaclass=Singleton) :
 
 		return result, status
 
-	def add_msg(self, url, data):
-		print("commander add msg is called ", url, data)
-		self.cmd_q.put((url, data))
-
 
 	def processor(self, category, task, job_id) :
 		result = 0 
 		status = 0
-		l.get().w.debug("task processor start  cateory {} job_id {}".format(category, job_id))
+		l.get().w.debug("Task processor start  cateory {} job_id {}".format(category, job_id))
 
 
 		if category == rc.TRACKER_READY :
 			trackers = TrackerGroup(self.msg_q, task['task_id'], job_id)
-			trackers.prepare(task)
-			DbManager.insert_newcommand(job_id, 0, task['task_id'])
-			self.trck_q.store(job_id, trackers)			
+			result, status = trackers.prepare(task)
+			if result == 0 :
+				DbManager.insert_newcommand(job_id, 0, task['task_id'])
+				self.trck_q.store(job_id, trackers)	
 
 
 		elif category == rc.TRACKER_START :
@@ -159,18 +157,19 @@ class Commander(metaclass=Singleton) :
 			result, status = trcks.status()
 
 		elif category == rc.TRACKER_DESTROY :
-			print("command : destroy is called. ")
 			trcks = self.trck_q.get_instance(job_id)
 			result, status = trcks.destroy()
 			self.trck_q.remove(job_id)
 
 
-		l.get().w.debug("task processor end  cateory {} job_id {}".format(category, job_id))		
+		l.get().w.debug("Task processor end result {} status {} ".format(result, status))		
 		return result, status
 
 	
 	def msg_callback(self, type, job_id, camera_id, data) :
-		print("recive message callback " , type, camera_id, data)
+		l.get().w.debug("Commander msg_callback processor  type {} job_id {} camera_id {} ".format(type, job_id, camera_id))				
+
+
 		trcks = self.trck_q.get_instance(job_id)
 
 		for trck in trcks.trackers : 
@@ -180,14 +179,12 @@ class Commander(metaclass=Singleton) :
 
 				if type == 'setinfo':					
 					if trck.err_code == 2000:
-						print("set info OK")						
 						trck.step = 'READY_OK'
 					else :
 						trck.step = 'READY_FAIL'						
 					break
 				elif type == 'start' :
 					if trck.err_code == 2000:
-						print("start OK")						
 						trck.step = 'START_OK'
 						trcks.rabbit.start()
 					else :
@@ -196,14 +193,19 @@ class Commander(metaclass=Singleton) :
 
 				elif type == 'stop' :
 					if trck.err_code == 2000:
-						print("stop  OK")						
 						trck.step = 'STOP_OK'
 						trcks.rabbit.stop()
 					else :
 						trck.step = 'STOP_FAIL'
 					break
 				elif type == 'status' :
-					print("status  OK ", data['status'])
 					trck.status = data['status']
 					break
+
+		#debugging..
+		for trck in trcks.trackers : 
+			if trck.camera_id == camera_id :
+				l.get().w.debug("Tracker camera_id {} -> err_code {} step {} ".format(
+					trck.camera_id, trck.err_code, trck.step))
+
 				

@@ -16,7 +16,5 @@ class Messages() :
 			msg['stream_url'] = data[0].stream_url
 			msg['result_send_info'] = data[1]['result_send_info']
 
-			print("assemble info msg : " , msg)
-
 		return msg
 
