@@ -34,7 +34,7 @@ class TrackerStock() :
 		print("store : ", key)
 		print(self.storage[key])
 
-	def revmoe (self, key) :
+	def remove (self, key) :
 		key = str(key)
 		if key in self.storage:
 			del self.storage[key]
@@ -158,6 +158,13 @@ class Commander(metaclass=Singleton) :
 			trcks = self.trck_q.get_instance(job_id)
 			result, status = trcks.status()
 
+		elif category == rc.TRACKER_DESTROY :
+			print("command : destroy is called. ")
+			trcks = self.trck_q.get_instance(job_id)
+			result, status = trcks.destroy()
+			self.trck_q.remove(job_id)
+
+
 		l.get().w.debug("task processor end  cateory {} job_id {}".format(category, job_id))		
 		return result, status
 
@@ -191,7 +198,7 @@ class Commander(metaclass=Singleton) :
 					if trck.err_code == 2000:
 						print("stop  OK")						
 						trck.step = 'STOP_OK'
-						trcks.rabbit.stop()						
+						trcks.rabbit.stop()
 					else :
 						trck.step = 'STOP_FAIL'
 					break

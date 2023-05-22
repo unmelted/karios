@@ -9,7 +9,7 @@ class RequestCategory :
 	TRACKER_READY = 100
 	TRACKER_START = 200
 	TRACKER_STOP = 300
-	TRACKER_FINISH = 400
+	TRACKER_DESTROY = 400
 	SIMULATION_START = 500
 	SIMULATION_STOP = 600
 	TRACKER_STATUS = 700
@@ -58,6 +58,9 @@ def get_err_msg(err_code) :
 		-105: "There is no ready trackers",
 
 		-201: "Some Exception Error is occurred during requests.",
+		-202: "No process exception is occurred during Multiprocessor destroy.",
+		-203: "AccessDenied exception is occurred during Multiprocessor destroy."
+
 	}
 
 	if err_code in msg_pair :

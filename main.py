@@ -86,7 +86,7 @@ class Stop(Resource) :
 class Destroy(Resource) :
     def put(self, job_id=job_id):
         
-        result, status = Commander().add_task(rc.TRACKER_FINISH, job_id)
+        result, status = Commander().add_task(rc.TRACKER_DESTROY, job_id)
         msg = defn.get_err_msg(status)
 
         result = {
@@ -103,6 +103,22 @@ class GetStatus(Resource) :
     def get(self, job_id=job_id):
 
         result, status = Commander().add_task(rc.TRACKER_STATUS, job_id)
+        msg = defn.get_err_msg(status)
+
+        result = {
+            'status' : status,
+            'result' : result,
+            'message' : msg
+        }
+
+        return result
+
+@api.route('/kairos/destroy/<job_id>')
+@api.doc()
+class GetStatus(Resource) :
+    def put(self, job_id=job_id):
+
+        result, status = Commander().add_task(rc.TRACKER_DESTROY, job_id)
         msg = defn.get_err_msg(status)
 
         result = {

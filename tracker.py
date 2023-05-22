@@ -5,7 +5,7 @@ import threading
 from enum import Enum
 
 from define import Definition as defn
-from utility import *
+from messages import *
 from rabbit import Consumer
 from db_manager import DbManager
 
@@ -82,7 +82,7 @@ class TrackerGroup() :
 	def prepare(self, task) :
 
 		self.rabbit = Consumer(self.job_id, len(task['tracker']))
-		
+
 		for tracker in task['tracker']:
 			print("prepare for eache : ", tracker)
 			obj = tracker.replace('\'', '\"')
@@ -132,6 +132,7 @@ class TrackerGroup() :
 		status = 0
 		stop_cnt = 0
 		for tracker in self.trackers :
+			print("tracker stop ... for loop, tracker.step : ", tracker.step)
 			if tracker.step == 'START_OK' : 
 				self.msg_que.put((tracker.getUrl('stop'), 'PUT', None, 'stop', self.job_id, tracker.camera_id))
 				stop_cnt += 1
@@ -142,6 +143,18 @@ class TrackerGroup() :
 				status = -104
 
 		return result, status
+
+	def destroy(self) :
+		result = 0
+		status = 0
+
+		result, status = self.rabbit.close()
+
+		for tracker in self.trackers : 
+			self.trackers.remove(tracker)
+
+		return result, status 
+
 
 	def status(self) :
 		print("Tracker Group status check is called ")

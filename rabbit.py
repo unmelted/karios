@@ -1,4 +1,5 @@
 import os
+import psutil
 import multiprocessing
 import time
 import json
@@ -51,7 +52,7 @@ class MQConnection():
 		self.channel.basic_ack(delivery_tag=method.delivery_tag)
 
 	def close(self):
-		self.channel.queue_delete(self.job_id)
+		self.channel.queue_delete(self.queue_name)
 		self.channel.close()
 	
 
@@ -117,24 +118,42 @@ class Consumer() :
 		# self.thread_consumer = threading.Thread(target=self.mq.start)
 		# self.thread_consumer.start()
 
-		time.sleep(1) # if you want self producing, enalbe this.
-		self.produce_msg()
+		# time.sleep(1) # if you want self producing, enalbe this.
+		# self.produce_msg()
 	
 	def stop(self) :
 		if self.thread_producer != None :
 			self.run_flag = False
 			self.thread_producer.join()
 
-		for mq in self.mqs :
-			mq.stop()
-
-		for consumer in self.consumers :
-			consumer.join()
-
 
 	def close(self) :
-		self.mq.close()		
+		result = 0
+		status = 0
+
+		for mq in self.mqs :
+			mq.stop()
+			mq.close()
+
 		# self.thread_consumer.join()
+		print("rabbit close is called ")
+		for consumer in self.consumers :
+			print("stop consumer processing ------  ", consumer)
+			try : 
+				consumer.terminate()z
+				print("terminate ok")
+
+			except psutil.NoSuchProcess :
+				print("psutil.NoSuchProcess ")
+				result = -202
+
+			except psutil.AccessDenied :
+				print("psutil.AccessDenied ")
+				result = -203				
+
+		return result, status
+
+
 
 	def produce_msg(self) :
 		print("produce msage start... ")
