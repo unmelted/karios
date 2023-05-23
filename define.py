@@ -60,7 +60,8 @@ def get_err_msg(err_code) :
 		-104: "There is no stop-able trackers.",
 		-105: "There is no ready trackers",
 		-106: "Insufficient values for initialize TrackerGroup.",
-		-107: "There tracker set has no calibration data. Can't go on.",
+		-107: "There tracker set has no calibration data.",
+		-108: " No pts file for calibration.",
 
 		-201: "Some Exception Error is occurred during requests.",
 		-202: "No process exception is occurred during Multiprocessor destroy.",

@@ -88,8 +88,9 @@ class TrackerGroup() :
 	def prepare(self, task) :
 		result, status = 0, 0
 		self.rabbit = Consumer(self.job_id, len(task['tracker']))
-		self.calib = Calibration()
+
 		cal_id = []
+
 		for tracker in task['tracker']:
 
 			obj = tracker.replace('\'', '\"')
@@ -101,7 +102,7 @@ class TrackerGroup() :
 				mobj['stream_url'] != '' and mobj['calib_job_id'] != '':
 
 				tr.set_data( mobj['tracker_ip'], mobj['camera_id'], mobj['stream_url'], mobj['calib_job_id'])
-				cal_id.aooebd(mobj['calib_job_id'])
+				cal_id.append(mobj['calib_job_id'])
 				self.trackers.append(tr)
 				DbManager.insert_tracker_info(self.job_id, tr.tracker_ip, tr.stream_url)
 				DbManager.create_result_table(self.table_name1, self.table_name2)
@@ -112,10 +113,17 @@ class TrackerGroup() :
 			else : 
 				result = -106
 
-		if (len(self.calib_id))> 0 :
-			self.calib_id = new Set(cal_id);
-		else :
-			result = -107
+		if ( task['calib_type'] == 'exodus') :
+			if len(calib_id) > 0 :
+				calib_id = new Set(cal_id);
+			else : 
+				result = -107
+			
+		else if ( task['calib_type'] == 'file')
+			if ( task['calib_file'] == '' ) :
+				result = -108
+			else : 
+				self.calib = Calibration(task['calib_type'], task['calib_file'], calib_id)
 
 		l.get().w.debug("TrackerGourp Prepare End. result {} ".format(result))
 		return result, status 

@@ -13,10 +13,15 @@ from define import RequestCategory as rc
 
 class Calibration():
 
-    from_pts = 'file' # exodus data
-    from_data = '' 
-    calib_dta = {} #camera_id : group_id, 3d point, world point
+    calib_type = 'file' # or exodus
+    calib_file = '' 
+    calib_id = []
+    calib_ddta = {} #camera_id : group_id, 3d point, world point
 
-    def __init__(self, job_id, group_id):
+    def __init__(self, calib_type, calib_file, calib_id):
+        self.calib_type = calib_type
+        self.calib_file = calib_file
+        self.calib_id = calib_id
+
 
 
