@@ -29,9 +29,11 @@ class Definition(object) :
 
 	prefix = 'kairos_'
 
-	exodus_ip = '10.82.5.119'
+	exodus_ip = '10.82.5.130'
 	exodus_port = 9000
+	exodus_cmd = '/exodus/autocalib/'
 
+	shared_dir = '/mnt/images/' # local env only
 
 	def get_version(self):
 		return VERSION
@@ -62,6 +64,10 @@ def get_err_msg(err_code) :
 		-106: "Insufficient values for initialize TrackerGroup.",
 		-107: "There tracker set has no calibration data.",
 		-108: " No pts file for calibration.",
+		-109: "Can't open the pts file",
+		-110: "Send request to Exodus, but response is error",
+		-111: "Can't find matched calibration data. (calib type data)",
+		-112: "Can't find matched calibration data. (camera name match)",
 
 		-201: "Some Exception Error is occurred during requests.",
 		-202: "No process exception is occurred during Multiprocessor destroy.",

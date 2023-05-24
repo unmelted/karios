@@ -43,8 +43,15 @@ class TrackerStock() :
 
 	def get_instance(self, key) :
 		key = str(key)
-		l.get().w.debug("TrackerStock return instance {} in storage. ".format(key))
-		return self.storage[key]
+
+		if key in self.storage :
+			l.get().w.debug("TrackerStock return instance {} in storage. ".format(key))			
+			return self.storage[key]
+		else :
+			l.get().w.debug("TrackerStock There is no key {} in storage. ".format(key))
+			return None
+
+		return None
 
 
 class Commander(metaclass=Singleton) :
@@ -139,6 +146,8 @@ class Commander(metaclass=Singleton) :
 		if category == rc.TRACKER_READY :
 			trackers = TrackerGroup(self.msg_q, task['task_id'], job_id)
 			result, status = trackers.prepare(task)
+			result = trackers.set_calibration()
+
 			if result == 0 :
 				DbManager.insert_newcommand(job_id, 0, task['task_id'])
 				self.trck_q.store(job_id, trackers)	
@@ -179,7 +188,8 @@ class Commander(metaclass=Singleton) :
 
 				if type == 'setinfo':					
 					if trck.err_code == 2000:
-						trck.step = 'READY_OK'
+						# trck.set_calibration()
+						self.step = 'READY_OK'
 					else :
 						trck.step = 'READY_FAIL'						
 					break

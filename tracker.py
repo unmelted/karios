@@ -9,7 +9,7 @@ from define import Definition as defn
 from messages import *
 from rabbit import Consumer
 from db_manager import DbManager
-
+from calib import Calibration
 
 class Tracker() :
 	'''
@@ -35,6 +35,9 @@ class Tracker() :
 	stream_url = None
 	send_url = None
 	calib_job_id = None
+
+	world_pts = []
+	pts_3d = []
 
 
 	def set_data(self, tracker_ip, camera_id, stream_url, calib_job_id) :
@@ -63,6 +66,8 @@ class Tracker() :
 
 		return url
 	
+	def set_calibration(self, calib_data) :
+		self.step = 'READY_OK'
 
 class TrackerGroup() :
 
@@ -98,8 +103,7 @@ class TrackerGroup() :
 			print("Tracker add ", mobj)
 
 			tr = Tracker()
-			if mobj['tracker_ip'] != '' and  mobj['camera_id'] != '' and  
-				mobj['stream_url'] != '' and mobj['calib_job_id'] != '':
+			if mobj['tracker_ip'] != '' and  mobj['camera_id'] != '' and  mobj['stream_url'] != '' and mobj['calib_job_id'] != '':
 
 				tr.set_data( mobj['tracker_ip'], mobj['camera_id'], mobj['stream_url'], mobj['calib_job_id'])
 				cal_id.append(mobj['calib_job_id'])
@@ -114,19 +118,37 @@ class TrackerGroup() :
 				result = -106
 
 		if ( task['calib_type'] == 'exodus') :
-			if len(calib_id) > 0 :
-				calib_id = new Set(cal_id);
+			if len(cal_id) > 0 :
+				self.calib_id = list(set(cal_id));
 			else : 
 				result = -107
 			
-		else if ( task['calib_type'] == 'file')
+		elif ( task['calib_type'] == 'file') :
 			if ( task['calib_file'] == '' ) :
 				result = -108
-			else : 
-				self.calib = Calibration(task['calib_type'], task['calib_file'], calib_id)
+
+		if( result >= 0 ) :
+			self.calib = Calibration(task['calib_type'], task['calib_file'], self.calib_id)
 
 		l.get().w.debug("TrackerGourp Prepare End. result {} ".format(result))
 		return result, status 
+
+
+	def set_calibration(self) :
+
+		result = self.calib.load_data()
+		if result < 0 :
+			return result
+
+		for tracker in self.trackers :
+			result, tracker.world_pts, tracker.pts_3d = self.calib.get_points(tracker.camera_id, tracker.calib_job_id)
+			l.get().w.debug("Tracker set calibration data camera {} ---  world {} pts_3d {} result {} ".format(tracker.camera_id, tracker.world_pts, tracker.pts_3d, result))
+
+			tracker.err_code = result
+			if result == 0 :
+				tracker.step = 'READY_OK'
+			else :
+				tracker.step = 'READY_FAIL'
 
 
 

@@ -18,6 +18,8 @@ app.config.SWAGGER_UI_DOC_EXPANSION = 'full'
 
 ready_info = api.model('ready_info', {
     'task_id' : fields.String,
+    'calib_type' : fields.String,
+    'calib_file' : fields.String,
     'tracker' : fields.List(fields.Raw({ "type" : "String"}, io = 'r'))
 })
 
@@ -30,6 +32,8 @@ class ready(Resource):
 
         parser = reqparse.RequestParser()
         parser.add_argument('task_id', type=str)
+        parser.add_argument('calib_type', type=str)
+        parser.add_argument('calib_file', type=str)
         parser.add_argument('tracker', default=list, action='append')
         args = parser.parse_args()
 
