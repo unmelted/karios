@@ -67,7 +67,9 @@ def get_err_msg(err_code) :
 		-109: "Can't open the pts file",
 		-110: "Send request to Exodus, but response is error",
 		-111: "Can't find matched calibration data. (calib type data)",
-		-112: "Can't find matched calibration data. (camera name match)",
+		-112: "Can't find matched calibration data. (camera name or group match)",
+		-113: "Prepare Fail. Some cameras can't get calibration data.",
+		-114 : "Find homography can't be calculated.",
 
 		-201: "Some Exception Error is occurred during requests.",
 		-202: "No process exception is occurred during Multiprocessor destroy.",

@@ -36,7 +36,8 @@ class ready(Resource):
         parser.add_argument('calib_file', type=str)
         parser.add_argument('tracker', default=list, action='append')
         args = parser.parse_args()
-
+        print('ready command args : ', args)
+        
         result, status = Commander().add_task(rc.TRACKER_READY, args)
         msg = defn.get_err_msg(status)
         result = {

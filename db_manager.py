@@ -39,9 +39,9 @@ class DbManager(BaseQuery):
         
         result = DBLayer.queryWorker('create', query)
 
-        query = f"CREATE TABLE IF NOT EXISTS {table_name2} (no SERIAL, frame_id INTEGER PRIMARY KEY NOT NULL, object_id TEXT, team TEXT, x REAL, y REAL, width REAL, height REAL, detail TEXT)"
+        # query = f"CREATE TABLE IF NOT EXISTS {table_name2} (no SERIAL, frame_id INTEGER PRIMARY KEY NOT NULL, object_id TEXT, team TEXT, x REAL, y REAL, width REAL, height REAL, detail TEXT)"
 
-        result = DBLayer.queryWorker('create', query)
+        # result = DBLayer.queryWorker('create', query)
         
 
     @classmethod
@@ -54,14 +54,13 @@ class DbManager(BaseQuery):
         pass
 
     @classmethod
-    def insert_que_result(cls, table_name, frame_id, camera_id, from_id, objects) :
+    def insert_que_result(cls, table_name, frame_id, camera_id, from_id, object) :
         print("insert que result .." , table_name, frame_id, camera_id, from_id)
 
-        for obj in objects : 
-            q = BaseQuery.insert(table_name, frame_id=frame_id, camera_id=camera_id, from_id=from_id, object_id=obj['id'],
-            confidence=0.0, team=obj['team'], x=float(obj['x']), y=float(obj['y']), width=float(obj['width']), height=float(obj['height']))
+        q = BaseQuery.insert(table_name, frame_id=frame_id, camera_id=camera_id, from_id=from_id, object_id=object['id'],
+        confidence=0.0, team=object['team'], x=float(object['x']), y=float(object['y']), width=float(object['width']), height=float(object['height']))
 
-            result = DBLayer.queryWorker('insert', q)
+        result = DBLayer.queryWorker('insert', q)
 
 
 

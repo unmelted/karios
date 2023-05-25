@@ -4,6 +4,8 @@ import json
 import requests
 from requests.exceptions import RequestException
 import asyncio
+import cv2
+import numpy as np
 
 from logger import Logger as l
 from db_manager import DbManager
@@ -51,13 +53,14 @@ class Calibration():
                     result = -110
                     break
 
-        l.get().w.debung("Calibration load data done. ", self.calib_raw_data)
+        l.get().w.debug("Calibration load data done. ", self.calib_raw_data)
         return result
     
     
     def load_data_file(self) :
-
-        filename = self.calib_file.split('/')[1:]
+        result = 0
+        # filename = self.calib_file[self.calib_file.find('/')[1] :]
+        filename = self.calib_file.split('/Volumes', 1)[-1]
         print('load_data_file filename : ', filename)
 
         with open(filename, 'r') as json_file :
@@ -67,37 +70,89 @@ class Calibration():
             l.get().w.error('cant open the pts file')
             return -109
 
+        return result 
         
 
-    def get_points(self, camera_id, calib_job_id) :
+    def get_points(self, camera_id, group, calib_job_id = None) :
         result = 0
-        world_pts = []
-        pts_3d = []
+        world = []
+        pts = []
+        world_pts = None
+        pts_3d = None
         
         if self.calib_type == 'file' and self.calib_raw_data != None :
-            result, world_pts, pts_3d = self.get_points_from_file()
+            result, world, pts = self.get_points_from_file(camera_id, group)
 
-        else self.calib_type == 'exodus' and self.calib_raw_data != None and calib_job_id != -1:
-            result, world_pts, pts_3d = self.get_points_from_data()
+        elif self.calib_type == 'exodus' and self.calib_raw_data != None and calib_job_id != -1:
+            result, world, pts = self.get_points_from_data(camera_id, gourp, calib_job_id)
 
         else :
-            result = -111
+            result = -111, 0, 0
+
+        if result == 0 :
+            world_pts = np.array([[world[0], world[1]], 
+                                    [world[2], world[3]], 
+                                    [world[4], world[5]], 
+                                    [world[6], world[7]]])
+            pts_3d = np.array([[pts[0],pts[1]], 
+                                [pts[2], pts[3]], 
+                                [pts[4], pts[5]], 
+                                [pts[6], pts[7]]])
+
         return result, world_pts, pts_3d
 
 
-    def get_points_from_file( self, camera_id ) :
+    def get_homography(self, base, pts_3d) :
+        H = None
+        result = 0
+
+        try : 
+            # print(base, pts_3d)
+            H, ret = cv2.findHomography(base, pts_3d, cv2.RANSAC)
+
+        except : 
+            l.get().w.error('find homography cannot calcualte. maybe point error')
+            result = -114
+
+        return result, H
+
+    def get_points_from_file( self, camera_id, group ) :
         result = 0
         world_pts = []
         pts_3d = []
+
+        for i in range(len(self.calib_raw_data['worlds'])) :
+            print("camera group == world group ", group, self.calib_raw_data['worlds'][i]['group'])            
+            if self.calib_raw_data['worlds'][i]['group'] == group :
+
+                world_pts.append(float(self.calib_raw_data['worlds'][i]['world_coords']['X1']))
+                world_pts.append(float(self.calib_raw_data['worlds'][i]['world_coords']['Y1']))
+                world_pts.append(float(self.calib_raw_data['worlds'][i]['world_coords']['X2']))
+                world_pts.append(float(self.calib_raw_data['worlds'][i]['world_coords']['Y2']))
+                world_pts.append(float(self.calib_raw_data['worlds'][i]['world_coords']['X3']))
+                world_pts.append(float(self.calib_raw_data['worlds'][i]['world_coords']['Y3']))
+                world_pts.append(float(self.calib_raw_data['worlds'][i]['world_coords']['X4']))
+                world_pts.append(float(self.calib_raw_data['worlds'][i]['world_coords']['Y4']))
+                break
 
         for j in range(len(self.calib_raw_data['points'])) :
             if self.calib_raw_data['points'][j]['dsc_id'] == camera_id :
                 print("camera name == dsc_id ", camera_id, self.calib_raw_data['points'][j]['dsc_id'])
+                pts_3d.append(float(self.calib_raw_data['points'][j]['pts_3d']['X1']))
+                pts_3d.append(float(self.calib_raw_data['points'][j]['pts_3d']['Y1']))
+                pts_3d.append(float(self.calib_raw_data['points'][j]['pts_3d']['X2']))
+                pts_3d.append(float(self.calib_raw_data['points'][j]['pts_3d']['Y2']))
+                pts_3d.append(float(self.calib_raw_data['points'][j]['pts_3d']['X3']))
+                pts_3d.append(float(self.calib_raw_data['points'][j]['pts_3d']['Y3']))
+                pts_3d.append(float(self.calib_raw_data['points'][j]['pts_3d']['X4']))
+                pts_3d.append(float(self.calib_raw_data['points'][j]['pts_3d']['Y4']))
+
                 break
 
         if len(world_pts) == 0 or len(pts_3d) == 0 :
-            result = -112
+            result = -112, 0, 0
 
+        l.get().w.error('get_points_from_file return result {} world {} pts_3d {}'.format(result, world_pts, pts_3d))
         return result, world_pts, pts_3d
 
 
@@ -106,8 +161,35 @@ class Calibration():
         world_pts = []
         pts_3d = []
 
+        for j in range(len(self.calib_raw_data[calib_job_id]['contents']['points'])) :
+            if self.calib_raw_data[calib_job_id]['contents']['world'][j]['group'] == group :
+                print("camera name == dsc_id ", camera_id, self.calib_raw_data['contents']['world'][j]['world_coords'])
+                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['X1']))
+                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['Y1']))
+                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['X2']))
+                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['Y2']))
+                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['X3']))
+                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['Y3']))
+                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['X4']))
+                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['Y4']))
 
+        for j in range(len(self.calib_raw_data[calib_job_id]['contents']['points'])) :
+            if self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id'] == camera_id :
+                print("camera name == dsc_id ", camera_id, self.calib_raw_data['contents']['points'][j]['dsc_id'])
+                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['X1']))
+                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['Y1']))
+                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['X2']))
+                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['Y2']))
+                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['X3']))
+                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['Y3']))
+                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['X4']))
+                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['Y4']))
 
+        if len(world_pts) == 0 or len(pts_3d) == 0 :
+            result = -112, 0, 0
+
+        l.get().w.error('get_points_from_data return result {} world {} pts_3d {}'.format(result, world_pts, pts_3d))
+        return result, world_pts, pts_3d
 
 
 

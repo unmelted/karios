@@ -3,6 +3,7 @@ import time
 import json
 import threading
 from enum import Enum
+import numpy as np
 
 from logger import Logger as l
 from define import Definition as defn
@@ -36,13 +37,14 @@ class Tracker() :
 	send_url = None
 	calib_job_id = None
 
-	world_pts = []
-	pts_3d = []
+	world_pts = None
+	pts_3d = None
 
 
-	def set_data(self, tracker_ip, camera_id, stream_url, calib_job_id) :
+	def set_data(self, group, tracker_ip, camera_id, stream_url, calib_job_id) :
 
 		self.step = 'CREATED'
+		self.group = group
 		self.tracker_ip = tracker_ip
 		self.camera_id = camera_id
 		self.stream_url = stream_url
@@ -65,9 +67,6 @@ class Tracker() :
 			url = self.send_url + '/status'
 
 		return url
-	
-	def set_calibration(self, calib_data) :
-		self.step = 'READY_OK'
 
 class TrackerGroup() :
 
@@ -81,6 +80,8 @@ class TrackerGroup() :
 	calib_id = []
 	calib = None
 
+	Hset = {}
+
 	def __init__ (self, que, task_id, job_id):
 
 		self.task_id = task_id
@@ -93,7 +94,6 @@ class TrackerGroup() :
 	def prepare(self, task) :
 		result, status = 0, 0
 		self.rabbit = Consumer(self.job_id, len(task['tracker']))
-
 		cal_id = []
 
 		for tracker in task['tracker']:
@@ -105,10 +105,9 @@ class TrackerGroup() :
 			tr = Tracker()
 			if mobj['tracker_ip'] != '' and  mobj['camera_id'] != '' and  mobj['stream_url'] != '' and mobj['calib_job_id'] != '':
 
-				tr.set_data( mobj['tracker_ip'], mobj['camera_id'], mobj['stream_url'], mobj['calib_job_id'])
+				tr.set_data( mobj['group'], mobj['tracker_ip'], mobj['camera_id'], mobj['stream_url'], mobj['calib_job_id'])
 				cal_id.append(mobj['calib_job_id'])
 				self.trackers.append(tr)
-				DbManager.insert_tracker_info(self.job_id, tr.tracker_ip, tr.stream_url)
 				DbManager.create_result_table(self.table_name1, self.table_name2)
 
 				msg = Messages.assemble_info_msg('setinfo', (tr, self.rabbit.getResultQueInfo()))
@@ -127,7 +126,7 @@ class TrackerGroup() :
 			if ( task['calib_file'] == '' ) :
 				result = -108
 
-		if( result >= 0 ) :
+		if( result == 0 ) :
 			self.calib = Calibration(task['calib_type'], task['calib_file'], self.calib_id)
 
 		l.get().w.debug("TrackerGourp Prepare End. result {} ".format(result))
@@ -140,16 +139,30 @@ class TrackerGroup() :
 		if result < 0 :
 			return result
 
+		bfail = False
 		for tracker in self.trackers :
-			result, tracker.world_pts, tracker.pts_3d = self.calib.get_points(tracker.camera_id, tracker.calib_job_id)
+			result, tracker.world_pts, tracker.pts_3d = self.calib.get_points(tracker.camera_id, tracker.group, tracker.calib_job_id)
 			l.get().w.debug("Tracker set calibration data camera {} ---  world {} pts_3d {} result {} ".format(tracker.camera_id, tracker.world_pts, tracker.pts_3d, result))
 
+			if result == 0 :
+				result, H = self.calib.get_homography(tracker.world_pts, tracker.pts_3d)
+				if result == 0 :
+					self.Hset[tracker.camera_id] = H
+	
 			tracker.err_code = result
 			if result == 0 :
 				tracker.step = 'READY_OK'
+				DbManager.insert_tracker_info(self.job_id, tracker.tracker_ip, tracker.stream_url)				
 			else :
 				tracker.step = 'READY_FAIL'
+				bfail = True
 
+		if bfail == True :
+			result = -113
+		else :
+			self.rabbit.set_Hset(self.Hset)
+
+		return result
 
 
 	def start(self) :

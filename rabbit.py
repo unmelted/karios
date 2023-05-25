@@ -6,6 +6,8 @@ import json
 import pika
 import socket
 import threading
+import numpy as np
+import cv2
 
 from logger import Logger as l
 from define import Definition as defn
@@ -15,6 +17,7 @@ from db_manager import DbManager
 class MQConnection():
 
 	queue_name = None
+	Hset = None		
 
 	def __init__(self, parameters, queue_name, table_name):
 		self.parameter = parameters
@@ -43,17 +46,31 @@ class MQConnection():
 		# print(type(json_body ))
 		# print(properties.headers)
 		# print(properties.headers['from_id'])
-		DbManager.insert_que_result(self.table_name, 
-									properties.headers['frame_id'], 
-									properties.headers['camera_id'],
-									properties.headers['from_id'],
-									json_body['objects'])
-
+		self.convert_message_body(properties, json_body)
 		self.channel.basic_ack(delivery_tag=method.delivery_tag)
 
 	def close(self):
 		self.channel.queue_delete(self.queue_name)
 		self.channel.close()
+
+	def convert_message_body(self, properties, body) :
+		# print(self.Hset[properties.headers['camera_id']])
+		H = self.Hset[properties.headers['camera_id']]
+
+		for obj in body['objects'] :
+			pt = np.float32(np.array( [[[ obj['x'], obj['y'] ]]]))
+			mv_pt = cv2.perspectiveTransform(pt, H)
+			print("moved pt " , mv_pt)
+
+			obj['x'] = mv_pt[0][0][0]
+			obj['y'] = mv_pt[0][0][1]
+	
+			DbManager.insert_que_result(self.table_name, 
+									properties.headers['frame_id'], 
+									properties.headers['camera_id'],
+									properties.headers['from_id'],
+									obj)
+		
 	
 
 
@@ -90,6 +107,11 @@ class Consumer() :
 
 	def getQueName(self) :
 		return self.queue_name
+	
+	def set_Hset(self, hset) :
+
+		for mq in self.mqs : 
+			mq.Hset = hset
 
 	def getResultQueInfo(self) :
 		result_q = {"result_send_info": {
@@ -118,8 +140,8 @@ class Consumer() :
 		# self.thread_consumer = threading.Thread(target=self.mq.start)
 		# self.thread_consumer.start()
 
-		# time.sleep(1) # if you want self producing, enalbe this.
-		# self.produce_msg()
+		time.sleep(1) # if you want self producing, enalbe this.
+		self.produce_msg()
 	
 	def stop(self) :
 		if self.thread_producer != None :
@@ -159,7 +181,7 @@ class Consumer() :
 		print("produce msage start... ")
 
 		def sample_msg(que_name, run_flag) :
-			cam_index = '101101'
+			cam_index = '001068'
 			frame_id = 10000
 			print("sample_msg : ", que_name)
 
@@ -179,7 +201,7 @@ class Consumer() :
 				msgs = {"objects" : [{ "id" : 10, "x": 0.0526, "y": 0.125, "width": 0.1875, "height": 0.427, "conf" : 0.0, "team" : 'None'}, { "id" : 20, "x": 0.0626, "y": 0.4, "width": 0.33, "height": 0.31, "conf" : 0.0, "team" : 'None'}]}
 
 				json_msg = json.dumps(msgs)
-				print(json_msg)
+				# print(json_msg)
 				frame_id += 2
 				channel.basic_publish(exchange='', routing_key=que_name, properties=properties, body=json_msg)
 

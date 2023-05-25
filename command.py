@@ -41,6 +41,13 @@ class TrackerStock() :
 			l.get().w.debug("TrackerStock There is no key {}in storage. ".format(key))
 		l.get().w.debug("TrackerStock remove {} in storage. ".format( key))
 
+	def checking(self, key) :
+		key = str(key)
+		if key in self.storage :
+			return False
+		else :
+			return True
+
 	def get_instance(self, key) :
 		key = str(key)
 
@@ -146,12 +153,12 @@ class Commander(metaclass=Singleton) :
 		if category == rc.TRACKER_READY :
 			trackers = TrackerGroup(self.msg_q, task['task_id'], job_id)
 			result, status = trackers.prepare(task)
-			result = trackers.set_calibration()
+			if result == 0 :
+				result = trackers.set_calibration()
 
 			if result == 0 :
 				DbManager.insert_newcommand(job_id, 0, task['task_id'])
 				self.trck_q.store(job_id, trackers)	
-
 
 		elif category == rc.TRACKER_START :
 			trcks = self.trck_q.get_instance(job_id)
@@ -178,6 +185,9 @@ class Commander(metaclass=Singleton) :
 	def msg_callback(self, type, job_id, camera_id, data) :
 		l.get().w.debug("Commander msg_callback processor  type {} job_id {} camera_id {} ".format(type, job_id, camera_id))				
 
+		if(self.trck_q.checking(job_id)) :
+			l.get().w.error("This message callback can't be handled. Target tracker was disappeared. {}".format(job_id))
+			return
 
 		trcks = self.trck_q.get_instance(job_id)
 
@@ -188,7 +198,6 @@ class Commander(metaclass=Singleton) :
 
 				if type == 'setinfo':					
 					if trck.err_code == 2000:
-						# trck.set_calibration()
 						self.step = 'READY_OK'
 					else :
 						trck.step = 'READY_FAIL'						
