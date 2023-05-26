@@ -36,8 +36,12 @@ class MQConnection():
 	def start(self)	:
 		self.channel.start_consuming()
 
-	def stop(self):
+	def stop(self):		
 		self.channel.stop_consuming()
+
+	def close(self):
+		self.channel.queue_delete(self.queue_name)
+		self.channel.close()
 
 	def on_message(self, channel, method, properties, body):
 		print("Received message:", properties)
@@ -48,10 +52,6 @@ class MQConnection():
 		# print(properties.headers['from_id'])
 		self.convert_message_body(properties, json_body)
 		self.channel.basic_ack(delivery_tag=method.delivery_tag)
-
-	def close(self):
-		self.channel.queue_delete(self.queue_name)
-		self.channel.close()
 
 	def convert_message_body(self, properties, body) :
 		# print(self.Hset[properties.headers['camera_id']])
@@ -156,6 +156,7 @@ class Consumer() :
 		for mq in self.mqs :
 			mq.stop()
 			mq.close()
+			print("Rabbit close function in loop ..")
 
 		# self.thread_consumer.join()
 		print("rabbit close is called ")
@@ -181,7 +182,7 @@ class Consumer() :
 		print("produce msage start... ")
 
 		def sample_msg(que_name, run_flag) :
-			cam_index = '001068'
+			cam_index = '001014'
 			frame_id = 10000
 			print("sample_msg : ", que_name)
 

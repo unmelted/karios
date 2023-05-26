@@ -59,7 +59,7 @@ class Calibration():
     
     def load_data_file(self) :
         result = 0
-        # filename = self.calib_file[self.calib_file.find('/')[1] :]
+        # filename = need to be changed for the environment..
         filename = self.calib_file.split('/Volumes', 1)[-1]
         print('load_data_file filename : ', filename)
 

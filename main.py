@@ -37,9 +37,9 @@ class ready(Resource):
         parser.add_argument('tracker', default=list, action='append')
         args = parser.parse_args()
         print('ready command args : ', args)
-        
+
         result, status = Commander().add_task(rc.TRACKER_READY, args)
-        msg = defn.get_err_msg(status)
+        msg = defn.get_err_msg(result)
         result = {
             'status': status,
             'job_id': result,
@@ -58,7 +58,7 @@ class Start(Resource) :
     def put(self, job_id=job_id):
         print("start receive.. job_id : ", job_id)
         result, status = Commander().add_task(rc.TRACKER_START, job_id)
-        msg = defn.get_err_msg(status)
+        msg = defn.get_err_msg(result)
 
         result = {
             'status' : status,
@@ -76,7 +76,7 @@ class Stop(Resource) :
     def put(self, job_id=job_id):
         
         result, status = Commander().add_task(rc.TRACKER_STOP, job_id)
-        msg = defn.get_err_msg(status)
+        msg = defn.get_err_msg(result)
 
         result = {
             'status' : status,
@@ -92,7 +92,7 @@ class Destroy(Resource) :
     def put(self, job_id=job_id):
         
         result, status = Commander().add_task(rc.TRACKER_DESTROY, job_id)
-        msg = defn.get_err_msg(status)
+        msg = defn.get_err_msg(result)
 
         result = {
             'status' : status,
@@ -108,7 +108,7 @@ class GetStatus(Resource) :
     def get(self, job_id=job_id):
 
         result, status = Commander().add_task(rc.TRACKER_STATUS, job_id)
-        msg = defn.get_err_msg(status)
+        msg = defn.get_err_msg(result)
 
         result = {
             'status' : status,
@@ -124,7 +124,7 @@ class GetStatus(Resource) :
     def put(self, job_id=job_id):
 
         result, status = Commander().add_task(rc.TRACKER_DESTROY, job_id)
-        msg = defn.get_err_msg(status)
+        msg = defn.get_err_msg(result)
 
         result = {
             'status' : status,
@@ -144,6 +144,23 @@ class GetVersion(Resource) :
         print(ver)
         return {'result' : 'OK',
         'version' : ver}
+
+
+@api.route('/kairos/get_visualinfo/<column>/<row>')
+@api.doc()
+class GetVisualInfo(Resource) :
+    def get(self, columnn=column, row=row) :
+        print("call GetVisualInfo ")
+        result, status = Commander().add_task(rc.GET_VISUAL_INFO, column, row)
+
+        msg = defn.get_err_msg(resulg)
+
+        result = {
+            'result' : result,
+            'message' : msg
+        }
+
+
 
 if __name__ == '__main__':
     np = NewPool()

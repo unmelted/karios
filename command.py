@@ -160,22 +160,27 @@ class Commander(metaclass=Singleton) :
 				DbManager.insert_newcommand(job_id, 0, task['task_id'])
 				self.trck_q.store(job_id, trackers)	
 
-		elif category == rc.TRACKER_START :
-			trcks = self.trck_q.get_instance(job_id)
-			result, status = trcks.start()
+		else :
+			if(self.trck_q.checking(job_id)) :
+				l.get().w.error("This message callback can't be handled. Target tracker doesn't exist. {}".format(job_id))
+				return -101, status
 
-		elif category == rc.TRACKER_STOP :
-			trcks = self.trck_q.get_instance(job_id)
-			result, status = trcks.stop()
+			if category == rc.TRACKER_START :
+				trcks = self.trck_q.get_instance(job_id)
+				result, status = trcks.start()
 
-		elif category == rc.TRACKER_STATUS :			
-			trcks = self.trck_q.get_instance(job_id)
-			result, status = trcks.status()
+			elif category == rc.TRACKER_STOP :
+				trcks = self.trck_q.get_instance(job_id)
+				result, status = trcks.stop()
 
-		elif category == rc.TRACKER_DESTROY :
-			trcks = self.trck_q.get_instance(job_id)
-			result, status = trcks.destroy()
-			self.trck_q.remove(job_id)
+			elif category == rc.TRACKER_STATUS :			
+				trcks = self.trck_q.get_instance(job_id)
+				result, status = trcks.status()
+
+			elif category == rc.TRACKER_DESTROY :
+				trcks = self.trck_q.get_instance(job_id)
+				result, status = trcks.destroy()
+				self.trck_q.remove(job_id)
 
 
 		l.get().w.debug("Task processor end result {} status {} ".format(result, status))		

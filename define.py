@@ -13,6 +13,7 @@ class RequestCategory :
 	SIMULATION_START = 500
 	SIMULATION_STOP = 600
 	TRACKER_STATUS = 700
+	GET_VISUAL_INFO = 800
 
 class Definition(object) : 
 	
