@@ -55,7 +55,7 @@ data_min, data_max = -np.abs(data).max(), np.abs(data).max()
 
 fig, ax = plt.subplots()
 
-c = ax.pcolormesh(x, y, data, cmap='jet', vmin=data_min, vmax=data_max)
+c = ax.pcolormesh(x, y, data, cmap='OrRd', vmin=data_min, vmax=data_max)
 ax.set_title('pcolormesh')
 
 # setting the limits of the plot to the limits of the data

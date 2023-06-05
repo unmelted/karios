@@ -146,21 +146,6 @@ class GetVersion(Resource) :
         'version' : ver}
 
 
-@api.route('/kairos/get_visualinfo/<column>/<row>')
-@api.doc()
-class GetVisualInfo(Resource) :
-    def get(self, columnn=column, row=row) :
-        print("call GetVisualInfo ")
-        result, status = Commander().add_task(rc.GET_VISUAL_INFO, column, row)
-
-        msg = defn.get_err_msg(resulg)
-
-        result = {
-            'result' : result,
-            'message' : msg
-        }
-
-
 
 if __name__ == '__main__':
     np = NewPool()
