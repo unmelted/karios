@@ -151,7 +151,11 @@ class Commander(metaclass=Singleton) :
 
 
 		if category == rc.TRACKER_READY :
-			trackers = TrackerGroup(self.msg_q, task['task_id'], job_id)
+			trackers = TrackerGroup()
+			trackers.set(self.msg_q, task['task_id'], job_id)
+			print("--------------- created tracker id : ", id(trackers))
+			print("--------------- tracker count exists .. : ", len(trackers.trackers))
+
 			result, status = trackers.prepare(task)
 			if result == 0 :
 				result = trackers.set_calibration()

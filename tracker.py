@@ -22,25 +22,27 @@ class Tracker() :
 		STOP_OK = 500
 		STOP_FAIL = 600
 	'''
-	step = ''
-	status = None
-	err_code = None
-	err_msg = None
-	group = None
 
-	tracker_ip = None
-	tracker_port = defn.tracker_port
-	tracker_name = defn.tracker_name
+	def __init__(self) :
+		self.step = ''
+		self.status = None
+		self.err_code = None
+		self.err_msg = None
+		self.group = None
 
-	camera_id = None
-	stream_url = None
-	send_url = None
-	calib_job_id = None
+		self.tracker_ip = None
+		self.tracker_port = defn.tracker_port
+		self.tracker_name = defn.tracker_name
 
-	world_pts = None
-	pts_3d = None
+		self.camera_id = None
+		self.stream_url = None
+		self.send_url = None
+		self.calib_job_id = None
 
+		self.world_pts = None
+		self.pts_3d = None
 
+	
 	def set_data(self, group, tracker_ip, camera_id, stream_url, calib_job_id) :
 
 		self.step = 'CREATED'
@@ -70,19 +72,20 @@ class Tracker() :
 
 class TrackerGroup() :
 
-	msg_que = None
-	job_id = None
-	task_id = None
-	trackers = []
-	rabbit = None
-	table_name1 = None
-	table_name2 = None
-	calib_id = []
-	calib = None
+	def __init__(self):
 
-	Hset = {}
+		self.msg_que = None
+		self.job_id = None
+		self.task_id = None
+		self.trackers = []  # Initialize as an instance variable
+		self.rabbit = None
+		self.table_name1 = None
+		self.table_name2 = None
+		self.calib_id = []
+		self.calib = None
+		self.Hset = {}
 
-	def __init__ (self, que, task_id, job_id):
+	def set(self, que, task_id, job_id):
 
 		self.task_id = task_id
 		self.job_id = job_id
@@ -104,11 +107,9 @@ class TrackerGroup() :
 
 			tr = Tracker()
 			if mobj['tracker_ip'] != '' and  mobj['camera_id'] != '' and  mobj['stream_url'] != '' and mobj['calib_job_id'] != '':
-
 				tr.set_data( mobj['group'], mobj['tracker_ip'], mobj['camera_id'], mobj['stream_url'], mobj['calib_job_id'])
 				cal_id.append(mobj['calib_job_id'])
 				self.trackers.append(tr)
-				DbManager.create_result_table(self.table_name1, self.table_name2)
 
 				msg = Messages.assemble_info_msg('setinfo', (tr, self.rabbit.getResultQueInfo()))
 				self.msg_que.put((tr.getUrl('setinfo'), 'POST', msg, 'setinfo', self.job_id, tr.camera_id))
@@ -127,6 +128,7 @@ class TrackerGroup() :
 				result = -108
 
 		if( result == 0 ) :
+			DbManager.create_result_table(self.table_name1, self.table_name2)			
 			self.calib = Calibration(task['calib_type'], task['calib_file'], self.calib_id)
 
 		l.get().w.debug("TrackerGourp Prepare End. result {} ".format(result))
@@ -140,7 +142,10 @@ class TrackerGroup() :
 			return result
 
 		bfail = False
+		print("set_calibration.. tracker count : ", len(self.trackers))
+
 		for tracker in self.trackers :
+			print(tracker.camera_id, tracker.tracker_ip, tracker.stream_url)
 			result, tracker.world_pts, tracker.pts_3d = self.calib.get_points(tracker.camera_id, tracker.group, tracker.calib_job_id)
 			l.get().w.debug("Tracker set calibration data camera {} ---  world {} pts_3d {} result {} ".format(tracker.camera_id, tracker.world_pts, tracker.pts_3d, result))
 
@@ -219,7 +224,7 @@ class TrackerGroup() :
 		result = 0
 		status = 0
 
-		for tracker in self.tracker :
+		for tracker in self.trackers :
 			self.msg_que.put((tr.getUrl('status'), 'GET', None, 'status', self.job_id, tracker.camera_id))
 
 		l.get().w.debug("TrackerGourp Status request send.")
