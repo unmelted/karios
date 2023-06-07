@@ -134,6 +134,22 @@ class GetStatus(Resource) :
 
         return result
 
+@api.route('/kairos/visualinfo/<job_id>')
+@api.doc()
+class GetVsiaulizeInfo(Resource) :
+    def get(self, job_id=job_id):
+
+        result, status, data = Commander().add_task(rc.GET_VISUAL_INFO, job_id)
+        msg = defn.get_err_msg(result)
+
+        result = {
+            'status' : status,
+            'result' : result,
+            'data' : data,
+            'message' : msg
+        }
+
+        return result
 
 @api.route('/kairos/get_version')
 @api.doc()
