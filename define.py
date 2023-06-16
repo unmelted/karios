@@ -12,6 +12,7 @@ class RequestCategory :
 	TRACKER_DESTROY = 400
 	TRACKER_STATUS = 700
 	GET_VISUAL_INFO = 800
+	GET_VISUAL_DATA = 900		
 
 class Definition(object) : 
 	
@@ -33,6 +34,8 @@ class Definition(object) :
 	exodus_cmd = '/exodus/autocalib/'
 
 	shared_dir = '/mnt/images/' # local env only
+
+	visualize_data_limit = ''
 
 	def get_version(self):
 		return VERSION
@@ -68,7 +71,9 @@ def get_err_msg(err_code) :
 		-111: "Can't find matched calibration data. (calib type data)",
 		-112: "Can't find matched calibration data. (camera name or group match)",
 		-113: "Prepare Fail. Some cameras can't get calibration data.",
-		-114 : "Find homography can't be calculated.",
+		-114 : "Find homography can't be calculated."
+		-115 : "Can't find result table of tracker group.",
+		-116 : "Cant' get the visualize info from result table. (DB Error)",
 
 		-201: "Some Exception Error is occurred during requests.",
 		-202: "No process exception is occurred during Multiprocessor destroy.",

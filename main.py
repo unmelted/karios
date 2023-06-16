@@ -140,12 +140,55 @@ class GetVsiaulizeInfo(Resource) :
     def get(self, job_id=job_id):
 
         result, status, data = Commander().add_task(rc.GET_VISUAL_INFO, job_id)
+        #data is dictionary = { 'start_time', 'start_frame', 'end_time', 'end_frame' }
+
         msg = defn.get_err_msg(result)
 
         result = {
             'status' : status,
             'result' : result,
-            'data' : data,
+            'data' : json.dumps(data),
+            'message' : msg
+        }
+
+        return result
+
+@api.route('/kairos/visualdata/<path:parameteres>')
+#<int:job_id>/<string:type>/<int:start_frame>/<int:end_frame>')
+@api.doc()
+class GetVsiaulizeData(Resource) :
+    def get(self, parameters):
+
+        param_list = parameters.split('/')
+        print(param_list)
+        #comon : job_id, visualize_type
+        #type1 : 'heatmap' : data is dictionary = { 'start_frame', 'end_frame' }
+        #type2 : 'player_3d' on frame : {'target_frame' : }
+        #type3 : 'player_2d' on frame at multi channel {'target_frame' : }
+        task = {}
+        job_id = param_list[0]
+        vis_type = param_list[1]
+        task['type'] = vis_type
+
+        if (vis_type == 'heatmap') :
+            task['start_frame'] = param_list[2]
+            task['end_frame'] = param_list[3]
+            result, status, data = Commander().add_task(rc.GET_VISUAL_DATA, task, job_id) 
+        
+        elif (vis_type == 'player_3d' or vis_type == 'player_3d') :
+            task['target_frame'] = param_list[2]
+            result, status, data = Commander().add_task(rc.GET_VISUAL_DATA, task, job_id) 
+
+        else :
+            result = -117
+            status = 0
+
+        msg = defn.get_err_msg(result)
+
+        result = {
+            'status' : status,
+            'result' : result,
+            'data' : json.dumps(data),
             'message' : msg
         }
 

@@ -138,8 +138,15 @@ class Commander(metaclass=Singleton) :
 				result = None
 				status =  -22
 
+		elif category == rc.GET_VISUAL_INFO:
+			result, status = self.processor(category, job_id=task['job_id'])
+
+		elif category == rc.GET_VISUAL_DATA :
+			result, status = self.processor(category, task, job_id=task['job_id'])
+
 		elif category > rc.TRACKER_READY :
-			result, status = self.processor(category, None, task)
+			# in this category, task is job_id
+			result, status = self.processor(category, None, job_id=task)
 
 		return result, status
 
@@ -163,6 +170,38 @@ class Commander(metaclass=Singleton) :
 			if result == 0 :
 				DbManager.insert_newcommand(job_id, 0, task['task_id'])
 				self.trck_q.store(job_id, trackers)	
+
+		elif category == rc.GET_VISUAL_INFO :
+			data = None
+			if (DbManager.check_result_table(job_id) == True) :
+				result, st, sf, et, ef = DbManager.get_visual_info(job_id)
+				if result > 0 :
+					data = { 'start_time' : st,
+					'start_frame' : sf,
+					'end_time' : et,
+					'end_frame' : ef
+					}
+			else :
+				result = -115
+
+			l.get().w.info("GET_VISUAL_INFO return \n result {} status {}  data {} ".format(result, status, data))
+			return result, status, data
+
+
+		elif category == rc.GET_VISUAL_DATA : 
+			data = None
+			if (task['type'] == 'heatmap') : 
+				l.get().w.debug("Heatmap job_id {} start frame {} end frame {} ".format(job_id, task['start_frame'], task['end_frame']))
+				result, data = DbManager.get_players_data(job_id, task['start_frame'], task['end_frame'])
+
+			elif (task['type'] == 'palyer_3d') :
+				l.get().w.debug("player_3d job_id {} target frame {} ".format(job_id, task['target_frame'])
+
+				result, data = DbManager.get_players_data_1frame(job_id, task['target_frame']
+
+			elif (task['type'] == 'palyer_2d') :
+				result, data = DbManager.get_players_data_1frame(job_id, task['target_frame']
+
 
 		else :
 			if(self.trck_q.checking(job_id)) :
