@@ -133,9 +133,12 @@ class DBLayer(object):
 
         with DBLayer.getConn().connection() as conn :
             with conn.cursor() as cur:
-                cur.execute(query)
-                # print("--------------queryworker", os.getpid(), cur )
-
+                try : 
+                    cur.execute(query)
+                    # print("--------------queryworker", os.getpid(), cur )
+                except : 
+                    print("query worker raise exception.. ")
+                    
                 result = -1
 
                 if type == 'select-one':

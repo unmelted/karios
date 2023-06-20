@@ -38,7 +38,7 @@ class ready(Resource):
         args = parser.parse_args()
         print('ready command args : ', args)
 
-        result, status = Commander().add_task(rc.TRACKER_READY, args)
+        result, status = Commander().add_task(rc.TRACKER_READY, None, args)
         msg = defn.get_err_msg(result)
         result = {
             'status': status,
@@ -173,11 +173,11 @@ class GetVsiaulizeData(Resource) :
         if (vis_type == 'heatmap') :
             task['start_frame'] = param_list[2]
             task['end_frame'] = param_list[3]
-            result, status, data = Commander().add_task(rc.GET_VISUAL_DATA, task, job_id) 
+            result, status, data = Commander().add_task(rc.GET_VISUAL_DATA, job_id, task) 
         
         elif (vis_type == 'player_3d' or vis_type == 'player_3d') :
             task['target_frame'] = param_list[2]
-            result, status, data = Commander().add_task(rc.GET_VISUAL_DATA, task, job_id) 
+            result, status, data = Commander().add_task(rc.GET_VISUAL_DATA, job_id, task) 
 
         else :
             result = -117

@@ -90,8 +90,7 @@ class TrackerGroup() :
 		self.task_id = task_id
 		self.job_id = job_id
 		self.msg_que = que
-		self.table_name1 = defn.prefix+ str(self.job_id)
-		self.table_name2 = defn.prefix+ str(self.job_id) + '_3d'
+		self.table_name1, self.table_name2 = defn.get_table_name(self.job_id)		
 
 	
 	def prepare(self, task) :

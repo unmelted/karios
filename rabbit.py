@@ -19,12 +19,13 @@ class MQConnection():
 	queue_name = None
 	Hset = None		
 
-	def __init__(self, parameters, queue_name, table_name):
+	def __init__(self, parameters, queue_name, table_name1, table_name2):
 		self.parameter = parameters
 		self.connection = None
 		self.channel = None
 		self.queue_name = queue_name
-		self.table_name = table_name
+		self.table_name1 = table_name1
+		self.table_name2 = table_name2		
 
 
 	def ready(self):
@@ -58,6 +59,11 @@ class MQConnection():
 		H = self.Hset[properties.headers['camera_id']]
 
 		for obj in body['objects'] :
+			DbManager.insert_que_result_2d(self.table_name1,
+						properties.headers['frame_id'], 
+						properties.headers['camera_id'],
+						obj)
+
 			pt = np.float32(np.array( [[[ obj['x'], obj['y'] ]]]))
 			mv_pt = cv2.perspectiveTransform(pt, H)
 			print("moved pt " , mv_pt)
@@ -65,7 +71,7 @@ class MQConnection():
 			obj['x'] = mv_pt[0][0][0]
 			obj['y'] = mv_pt[0][0][1]
 	
-			DbManager.insert_que_result(self.table_name, 
+			DbManager.insert_que_result_3d(self.table_name2, 
 									properties.headers['frame_id'], 
 									properties.headers['camera_id'],
 									properties.headers['from_id'],
@@ -93,12 +99,12 @@ class Consumer() :
 		self.job_id = str(job_id)
 		self.consumer_count = count
 
-		self.queue_name = defn.prefix + self.job_id
-		self.table_name1 = defn.prefix+ self.job_id	
+		self.queue_name = defn.get_que_name(self.job_id)
+		self.table_name1, self.table_name2 = defn.get_table_name(self.job_id)
 		self.credentials = pika.PlainCredentials('replay', '1234')		
 
 		self.param = pika.ConnectionParameters('localhost', self.queue_port, '/', self.credentials)
-		mq = MQConnection(self.param, self.queue_name, self.table_name1)
+		mq = MQConnection(self.param, self.queue_name, self.table_name1, self.table_name2)
 		mq.ready()
 		self.mqs.append(mq)
 

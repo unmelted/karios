@@ -16,7 +16,7 @@ class TaskManager(BaseQuery):
     def Watcher(cls):
         while (True):
             time.sleep(2)
-            TaskManager.check_pid()
+            # TaskManager.check_pid()
 
     @classmethod
     def getActiveJobs(cls):

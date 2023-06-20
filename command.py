@@ -1,5 +1,6 @@
 import os
 import time
+import datetime
 from multiprocessing import Process, Queue
 import threading
 import requests
@@ -13,6 +14,7 @@ from task import TaskActivity
 from db_manager import DbManager
 from define import RequestCategory as rc
 from tracker import TrackerGroup
+from visualize import Visualize
 
 
 class Singleton(type):
@@ -120,7 +122,7 @@ class Commander(metaclass=Singleton) :
 		return response 
 
 
-	def add_task(self, category, task):
+	def add_task(self, category, job_id, task=None):
 		l.get().w.debug("Commander add_task category: {}".format(category))
 
 		result = None
@@ -129,7 +131,7 @@ class Commander(metaclass=Singleton) :
 		if category == rc.TRACKER_READY :
 			if TaskActivity.checkJobsUnderLimit() is True:
 				job_id = DbManager.getJobIndex() + 1
-				result, status = self.processor(category, task, job_id)
+				result, status = self.processor(category, job_id, task)
 				if result == 0 : 
 					result = job_id
 					status = 0
@@ -139,19 +141,19 @@ class Commander(metaclass=Singleton) :
 				status =  -22
 
 		elif category == rc.GET_VISUAL_INFO:
-			result, status = self.processor(category, job_id=task['job_id'])
+			result, status = self.processor(category, job_id)
 
 		elif category == rc.GET_VISUAL_DATA :
-			result, status = self.processor(category, task, job_id=task['job_id'])
+			result, status = self.processor(category,  job_id, task)
 
 		elif category > rc.TRACKER_READY :
 			# in this category, task is job_id
-			result, status = self.processor(category, None, job_id=task)
+			result, status = self.processor(category, job_id)
 
 		return result, status
 
 
-	def processor(self, category, task, job_id) :
+	def processor(self, category, job_id, task) :
 		result = 0 
 		status = 0
 		l.get().w.debug("Task processor start  cateory {} job_id {}".format(category, job_id))
@@ -175,33 +177,36 @@ class Commander(metaclass=Singleton) :
 			data = None
 			if (DbManager.check_result_table(job_id) == True) :
 				result, st, sf, et, ef = DbManager.get_visual_info(job_id)
-				if result > 0 :
-					data = { 'start_time' : st,
+				if result >= 0 :
+					data = { 'start_time' : st.isoformat(),
 					'start_frame' : sf,
-					'end_time' : et,
+					'end_time' : et.isoformat(),
 					'end_frame' : ef
 					}
 			else :
 				result = -115
 
 			l.get().w.info("GET_VISUAL_INFO return \n result {} status {}  data {} ".format(result, status, data))
-			return result, status, data
+			return result, status, json.dumps(data)
 
 
 		elif category == rc.GET_VISUAL_DATA : 
 			data = None
 			if (task['type'] == 'heatmap') : 
 				l.get().w.debug("Heatmap job_id {} start frame {} end frame {} ".format(job_id, task['start_frame'], task['end_frame']))
-				result, data = DbManager.get_players_data(job_id, task['start_frame'], task['end_frame'])
+				result, data = Visualize.generate_heatmap(job_id, task['start_frame'], task['end_frame'])
+
 
 			elif (task['type'] == 'palyer_3d') :
-				l.get().w.debug("player_3d job_id {} target frame {} ".format(job_id, task['target_frame'])
+				l.get().w.debug("player_3d job_id {} target frame {} ".format(job_id, task['target_frame']))
+				result, data = Visualize.generate_3d_data(job_id, task[target_framel])
 
-				result, data = DbManager.get_players_data_1frame(job_id, task['target_frame']
 
 			elif (task['type'] == 'palyer_2d') :
-				result, data = DbManager.get_players_data_1frame(job_id, task['target_frame']
+				l.get().w.debug("player_2d job_id {} target frame {} ".format(job_id, task['target_frame']))
+				result, data = Visualize.generate_2d_data(job_id, task[target_framel])
 
+			return result, status, data
 
 		else :
 			if(self.trck_q.checking(job_id)) :
