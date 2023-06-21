@@ -122,8 +122,8 @@ class Commander(metaclass=Singleton) :
 		return response 
 
 
-	def add_task(self, category, job_id, task=None):
-		l.get().w.debug("Commander add_task category: {}".format(category))
+	def add_task(self, category, job_id=None, task=None):
+		l.get().w.debug("Commander add_task category: {} job_id : {} task {} ".format(category, job_id, task))
 
 		result = None
 		status = 0
@@ -139,21 +139,26 @@ class Commander(metaclass=Singleton) :
 			else:
 				result = None
 				status =  -22
+			return result, status				
 
 		elif category == rc.GET_VISUAL_INFO:
-			result, status = self.processor(category, job_id)
+			result, status, data = self.processor(category, job_id)
+			return result, status, data
 
 		elif category == rc.GET_VISUAL_DATA :
-			result, status = self.processor(category,  job_id, task)
+			result, status, data = self.processor(category, job_id, task)
+			return result, status, data			
 
 		elif category > rc.TRACKER_READY :
 			# in this category, task is job_id
 			result, status = self.processor(category, job_id)
+			return result, status
+
 
 		return result, status
 
 
-	def processor(self, category, job_id, task) :
+	def processor(self, category, job_id, task=None) :
 		result = 0 
 		status = 0
 		l.get().w.debug("Task processor start  cateory {} job_id {}".format(category, job_id))

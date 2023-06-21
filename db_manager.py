@@ -119,32 +119,32 @@ class DbManager(BaseQuery):
     def get_players_data(cls, job_id, start_frame, end_frame) :
 
         _, table_name = defn.get_table_name(job_id)            
+        table_name = 'kairos_269'
+        
+        base = 'SELECT team, x, y FROM {} WHERE frame_id > {} and frame_id < {} ORDER BY frame_id;'
+        q = base.format(table_name, start_frame, end_frame)
+        rows = DBLayer.queryWorker('select-all', q)
 
-        data = None
-        base = 'SELECT team, x, y FROM {} \
-        WHERE frame_id > {} and frame_id < {} ORDER BY frame_id;'
-        q = base.format(table_name, start_frame, end_Frame)
-        data = DBLayer.queryWorker('select-all')
+        if rows == None or len(rows) == 0 :
+            return -118, 0
 
-        arr_data = np.array(data)
-        print("get_players_data : ", arr_data)
-
-        return arr_data
+        print("get_players_data : ", rows)
+        return 0, rows
 
     @classmethod
     def get_players_3d_1frame(cls, job_id, target_frame):
         _, table_name = defn.get_table_name(job_id)        
 
         data = None
-        base = 'SELECT team, x, y FROM {} \
-        WHERE frame_id = {};'
+        base = 'SELECT team, x, y FROM {} WHERE frame_id = {};'
         q = base.format(table_name, target_frame)
-        data = DBLayer.queryWorker('select-all')
+        rows = DBLayer.queryWorker('select-all', q)
 
-        arr_data = np.array(data)
-        print("get_players_data_1frame : ", arr_data)
+        if rows == None or len(rows) == 0 :
+            return -118, 0
 
-        return arr_data
+        print("get_players_data_1frame : ", rows)
+        return 0, rows
 
     @classmethod
     def get_players_2d_1frame(cls, job_id, target_frame):
@@ -154,12 +154,13 @@ class DbManager(BaseQuery):
         base = 'SELECT team, x, y FROM {} \
         WHERE frame_id = {};'
         q = base.format(table_name, target_frame)
-        data = DBLayer.queryWorker('select-all')
+        rows = DBLayer.queryWorker('select-all', q)
 
-        arr_data = np.array(data)
-        print("get_players_data_1frame : ", arr_data)
+        if rows == None or len(rows) == 0 :
+            return -118, 0
 
-        return arr_data
+        print("get_players_data_1frame : ", rows)
+        return 0, rows
 
 
 '''

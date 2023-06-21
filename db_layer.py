@@ -129,37 +129,36 @@ class DBLayer(object):
 
     @staticmethod
     def queryWorker(type, query):
-        # l.get().w.info("query worker : {}".format(query))
+        l.get().w.info("query worker type {} : {}".format(type, query))
 
         with DBLayer.getConn().connection() as conn :
             with conn.cursor() as cur:
                 try : 
+                    cur.arraysize = 100                    
                     cur.execute(query)
                     # print("--------------queryworker", os.getpid(), cur )
-                except : 
-                    print("query worker raise exception.. ")
+                except Exception as e : 
+                    l.get().w.error("query worker raise exception : {}".format(e))                    
                     
                 result = -1
 
                 if type == 'select-one':
                     result = cur.fetchone()
+
                 elif type == 'select-all':
-                    result = cur.fetchmany()
+                    result = []
+
+                    while True :
+                        batch = cur.fetchmany()
+                        if not batch :
+                            break
+
+                        result.extend(batch)
+
+                    l.get().w.info("fetch many result {} ".format(len(result)))
+
                 else:  # insert , update
                     conn.commit()
                     result = 0
 
-                # cursor = connection.cursor(cursor_factory=extras.NamedTupleCursor) #v2
-                # print("query worker : ", connection, cursor)
-                # cursor.execute(query) #v2
-
-                # if type == 'select-one':
-                #     result = cursor.fetchone()
-                # elif type == 'select-all':
-                #     result = cursor.fetchall()
-                # else:  # insert , update
-                #     conn.commit()
-                #     result = 0
-                # # print(result)
-                # cursor.close()
                 return result

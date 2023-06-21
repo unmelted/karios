@@ -33,7 +33,10 @@ class Definition(object) :
 
 	shared_dir = '/mnt/images/' # local env only
 
-	visualize_data_limit = ''
+	visualize_data_limit = 100000
+	horizontal_grid = 50
+	vertical_grid = 28
+
 
 	def get_version():
 		return VERSION
@@ -80,6 +83,9 @@ def get_err_msg(err_code) :
 		-114 : "Find homography can't be calculated.",
 		-115 : "Can't find result table of tracker group.",
 		-116 : "Cant' get the visualize info from result table. (DB Error)",
+		-117 : "Visualize type is wrong.",
+		-118 : "Result is empty for Visualizing.", 
+		-119 : "Result is too much. Decrease the range.",
 
 		-201: "Some Exception Error is occurred during requests.",
 		-202: "No process exception is occurred during Multiprocessor destroy.",

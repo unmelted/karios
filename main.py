@@ -143,22 +143,23 @@ class GetVsiaulizeInfo(Resource) :
         #data is dictionary = { 'start_time', 'start_frame', 'end_time', 'end_frame' }
 
         msg = defn.get_err_msg(result)
+        print("GetVisualizeInfo return .. ", result, data)
 
         result = {
             'status' : status,
             'result' : result,
-            'data' : json.dumps(data),
+            'data' : data,
             'message' : msg
         }
 
         return result
 
-@api.route('/kairos/visualdata/<path:parameteres>')
+@api.route('/kairos/visualdata/<path:parameters>')
 #<int:job_id>/<string:type>/<int:start_frame>/<int:end_frame>')
 @api.doc()
 class GetVsiaulizeData(Resource) :
     def get(self, parameters):
-
+        print('GetVisualizeData : ', parameters)
         param_list = parameters.split('/')
         print(param_list)
         #comon : job_id, visualize_type
@@ -167,15 +168,21 @@ class GetVsiaulizeData(Resource) :
         #type3 : 'player_2d' on frame at multi channel {'target_frame' : }
         task = {}
         job_id = param_list[0]
-        vis_type = param_list[1]
-        task['type'] = vis_type
 
-        if (vis_type == 'heatmap') :
+        if param_list[1] == '1' :
+            task['type'] = 'heatmap'
+        elif param_list[1] == '2' :
+            task['type'] = 'player_3d'
+        elif param_list[1] == '3' :
+            task['type'] == 'player_2d'
+
+
+        if (task['type'] == 'heatmap') :
             task['start_frame'] = param_list[2]
             task['end_frame'] = param_list[3]
             result, status, data = Commander().add_task(rc.GET_VISUAL_DATA, job_id, task) 
         
-        elif (vis_type == 'player_3d' or vis_type == 'player_3d') :
+        elif (task['type'] == 'player_3d' or task['type'] == 'player_2d') :
             task['target_frame'] = param_list[2]
             result, status, data = Commander().add_task(rc.GET_VISUAL_DATA, job_id, task) 
 
@@ -188,7 +195,7 @@ class GetVsiaulizeData(Resource) :
         result = {
             'status' : status,
             'result' : result,
-            'data' : json.dumps(data),
+            'data' : data,
             'message' : msg
         }
 
