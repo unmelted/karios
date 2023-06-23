@@ -202,14 +202,14 @@ class Commander(metaclass=Singleton) :
 				result, data = Visualize.generate_heatmap(job_id, task['start_frame'], task['end_frame'])
 
 
-			elif (task['type'] == 'palyer_3d') :
+			elif (task['type'] == 'player_3d') :
 				l.get().w.debug("player_3d job_id {} target frame {} ".format(job_id, task['target_frame']))
-				result, data = Visualize.generate_3d_data(job_id, task[target_framel])
+				result, data = Visualize.generate_3d_data(job_id, task['target_frame'])
 
 
-			elif (task['type'] == 'palyer_2d') :
+			elif (task['type'] == 'player_2d') :
 				l.get().w.debug("player_2d job_id {} target frame {} ".format(job_id, task['target_frame']))
-				result, data = Visualize.generate_2d_data(job_id, task[target_framel])
+				result, data = Visualize.generate_2d_data(job_id, task['target_frame'])
 
 			return result, status, data
 

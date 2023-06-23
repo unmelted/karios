@@ -134,6 +134,7 @@ class DbManager(BaseQuery):
     @classmethod
     def get_players_3d_1frame(cls, job_id, target_frame):
         _, table_name = defn.get_table_name(job_id)        
+        table_name = 'kairos_269'
 
         data = None
         base = 'SELECT team, x, y FROM {} WHERE frame_id = {};'
@@ -149,7 +150,8 @@ class DbManager(BaseQuery):
     @classmethod
     def get_players_2d_1frame(cls, job_id, target_frame):
         table_name, _ = defn.prefix + str(job_id) + '_3d'        
-
+        table_name = 'kairos_269'
+        
         data = None
         base = 'SELECT team, x, y FROM {} \
         WHERE frame_id = {};'
