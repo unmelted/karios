@@ -146,8 +146,8 @@ class Consumer() :
 		# self.thread_consumer = threading.Thread(target=self.mq.start)
 		# self.thread_consumer.start()
 
-		time.sleep(1) # if you want self producing, enalbe this.
-		self.produce_msg()
+		# time.sleep(1) # if you want self producing, enalbe this.
+		# self.produce_msg()
 	
 	def stop(self) :
 		if self.thread_producer != None :

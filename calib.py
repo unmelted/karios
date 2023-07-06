@@ -53,7 +53,7 @@ class Calibration():
                     result = -110
                     break
 
-        l.get().w.debug("Calibration load data done. ", self.calib_raw_data)
+        l.get().w.debug("Calibration load data done. ", self.calib_raw_data[self.calib_id[0]])
         return result
     
     
@@ -84,16 +84,20 @@ class Calibration():
             result, world, pts = self.get_points_from_file(camera_id, group)
 
         elif self.calib_type == 'exodus' and self.calib_raw_data != None and calib_job_id != -1:
-            result, world, pts = self.get_points_from_data(camera_id, gourp, calib_job_id)
+            result, world, pts = self.get_points_from_data(camera_id, group, calib_job_id)
 
         else :
             result = -111, 0, 0
 
         if result == 0 :
-            world_pts = np.array([[world[0], world[1]], 
-                                    [world[2], world[3]], 
-                                    [world[4], world[5]], 
-                                    [world[6], world[7]]])
+            # world_pts = np.array([[world[0], world[1]], 
+            #                         [world[2], world[3]], 
+            #                         [world[4], world[5]], 
+            #                         [world[6], world[7]]])
+            world_pts = np.array([[100, 100], 
+                                    [200, 200], 
+                                    [100, 500], 
+                                    [500, 500]])
             pts_3d = np.array([[pts[0],pts[1]], 
                                 [pts[2], pts[3]], 
                                 [pts[4], pts[5]], 
@@ -156,36 +160,37 @@ class Calibration():
         return result, world_pts, pts_3d
 
 
-    def get_points_from_data( self, camera_id, calib_jod_id) :
+    def get_points_from_data(self, camera_id, group, calib_jod_id) :
         result = 0
         world_pts = []
         pts_3d = []
 
-        for j in range(len(self.calib_raw_data[calib_job_id]['contents']['points'])) :
-            if self.calib_raw_data[calib_job_id]['contents']['world'][j]['group'] == group :
-                print("camera name == dsc_id ", camera_id, self.calib_raw_data['contents']['world'][j]['world_coords'])
-                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['X1']))
-                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['Y1']))
-                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['X2']))
-                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['Y2']))
-                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['X3']))
-                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['Y3']))
-                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['X4']))
-                world_pts.append(float(self.calib_raw_data[calib_job_id]['contents']['worlds'][j]['world_coords']['Y4']))
+        # for j in range(len(self.calib_raw_data['worlds'])) :
+        #     if self.calib_raw_data['world'][j]['group'] == group :
+        #         print("camera name == dsc_id ", camera_id, self.calib_raw_data['world'][j]['world_coords'])
+        #         world_pts.append(float(self.calib_raw_data['worlds'][j]['world_coords']['X1']))
+        #         world_pts.append(float(self.calib_raw_data['worlds'][j]['world_coords']['Y1']))
+        #         world_pts.append(float(self.calib_raw_data['worlds'][j]['world_coords']['X2']))
+        #         world_pts.append(float(self.calib_raw_data['worlds'][j]['world_coords']['Y2']))
+        #         world_pts.append(float(self.calib_raw_data['worlds'][j]['world_coords']['X3']))
+        #         world_pts.append(float(self.calib_raw_data['worlds'][j]['world_coords']['Y3']))
+        #         world_pts.append(float(self.calib_raw_data['worlds'][j]['world_coords']['X4']))
+        #         world_pts.append(float(self.calib_raw_data['worlds'][j]['world_coords']['Y4']))
 
-        for j in range(len(self.calib_raw_data[calib_job_id]['contents']['points'])) :
-            if self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id'] == camera_id :
-                print("camera name == dsc_id ", camera_id, self.calib_raw_data['contents']['points'][j]['dsc_id'])
-                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['X1']))
-                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['Y1']))
-                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['X2']))
-                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['Y2']))
-                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['X3']))
-                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['Y3']))
-                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['X4']))
-                pts_3d.append(float(self.calib_raw_data[calib_job_id]['contents']['points'][j]['dsc_id']['pts_3d']['Y4']))
+        for j in range(len(self.calib_raw_data[self.calib_id[0]]['points'])) :
+            if self.calib_raw_data[self.calib_id[0]]['points'][j]['dsc_id'] == camera_id :
+                print("camera name == dsc_id ", camera_id, self.calib_raw_data[self.calib_id[0]]['points'][j]['dsc_id'])
+                pts_3d.append(float(self.calib_raw_data[self.calib_id[0]]['points'][j]['pts_3d']['X1']))
+                pts_3d.append(float(self.calib_raw_data[self.calib_id[0]]['points'][j]['pts_3d']['Y1']))
+                pts_3d.append(float(self.calib_raw_data[self.calib_id[0]]['points'][j]['pts_3d']['X2']))
+                pts_3d.append(float(self.calib_raw_data[self.calib_id[0]]['points'][j]['pts_3d']['Y2']))
+                pts_3d.append(float(self.calib_raw_data[self.calib_id[0]]['points'][j]['pts_3d']['X3']))
+                pts_3d.append(float(self.calib_raw_data[self.calib_id[0]]['points'][j]['pts_3d']['Y3']))
+                pts_3d.append(float(self.calib_raw_data[self.calib_id[0]]['points'][j]['pts_3d']['X4']))
+                pts_3d.append(float(self.calib_raw_data[self.calib_id[0]]['points'][j]['pts_3d']['Y4']))
 
-        if len(world_pts) == 0 or len(pts_3d) == 0 :
+        # if len(world_pts) == 0 or len(pts_3d) == 0 :
+        if len(pts_3d) == 0 :
             result = -112, 0, 0
 
         l.get().w.error('get_points_from_data return result {} world {} pts_3d {}'.format(result, world_pts, pts_3d))

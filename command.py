@@ -74,7 +74,7 @@ class Commander(metaclass=Singleton) :
 		l.get().w.debug("Commander Start.")
 
 		def receiver_msg() :
-			internal = True
+			internal = False
 
 			while True :
 				time.sleep(0.3)

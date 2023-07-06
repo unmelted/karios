@@ -57,7 +57,7 @@ class DbManager(BaseQuery):
 
     @classmethod
     def insert_que_result_2d(cls, table_name, frame_id, camera_id, object) :
-        print("insert que result1 .." , table_name, frame_id, camera_id, from_id)
+        print("insert que result1 .." , table_name, frame_id, camera_id )
 
         q = BaseQuery.insert(table_name, frame_id=frame_id, camera_id=camera_id, object_id=object['id'],
         team=object['team'], x=float(object['x']), y=float(object['y']), width=float(object['width']), height=float(object['height']))
