@@ -212,6 +212,46 @@ class GetVersion(Resource) :
         'version' : ver}
 
 
+@api.route('/kairos/pe/init')
+@api.doc()
+class Initialize(Resource) :
+    def put(self) :
+        print("Pose Estimation server initialize")
+        result  = Commander().add_task(rc.LOAD_POSE_MODEL)
+        msg = defn.get_err_msg(result)
+
+        return {
+            'result' : result,
+            'message' : msg}
+
+
+@api.route('/kairos/pe/estimate_pose/<string:token>/<string:target_path>/<int:target_frame>')
+@api.doc()
+class estimate_pose(Resource) :
+    def get(self, token, target_path, target_frame) :
+        print("Pose Estimation ", token, target_path, target_frame)
+
+        result = Commander().add_task(rc.LOAD_POSE_MODEL, token, (target_path, target_frame))
+        msg = defn.get_err_msg(result)
+
+        return {
+            'result' : result,
+            'message' : msg}
+
+@api.route('/kairos/pe/detect_ball/<string:token>/<string:target_path>/<int:target_frame>')
+@api.doc()
+class detect_ball(Resource) :
+    def get(self, token, target_path, target_frame) :
+        print("detect ball : ", token, target_path, target_frame)
+
+        result = Commander().add_task(rc.DETECT_BALL, token, (target_path, target_frame))
+        msg = defn.get_err_msg(result)
+
+        return {
+            'result' : result,
+            'message' : msg}
+
+
 
 if __name__ == '__main__':
     np = NewPool()

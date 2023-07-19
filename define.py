@@ -4,7 +4,7 @@ import enum
 VERSION = 'V0.0.0.1'
 
 class RequestCategory :
-	INIT = 0
+	## multi-channel tracker job	
 	GET_VERSION = 10
 	TRACKER_READY = 100
 	TRACKER_START = 200
@@ -13,6 +13,13 @@ class RequestCategory :
 	TRACKER_STATUS = 700
 	GET_VISUAL_INFO = 800
 	GET_VISUAL_DATA = 900		
+
+	##pose estimation job
+	LOAD_POSE_MODEL = 1000
+	ESTIMATE_POSE = 1100
+	DETECT_BALL = 1200
+
+
 
 class Definition(object) : 
 	
