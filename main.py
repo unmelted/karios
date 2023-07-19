@@ -24,7 +24,7 @@ ready_info = api.model('ready_info', {
 })
 
 
-@api.route('/kairos/ready')
+@api.route('/kairos/mct/ready')
 @api.doc()
 class ready(Resource):
     @api.expect(ready_info)
@@ -52,7 +52,7 @@ job_id = api.model('job_id', {
     'job_id': fields.String,
 })
 
-@api.route('/kairos/start/<job_id>')
+@api.route('/kairos/mct/start/<job_id>')
 @api.doc()
 class Start(Resource) :
     def put(self, job_id=job_id):
@@ -70,7 +70,7 @@ class Start(Resource) :
         return result
 
 
-@api.route('/kairos/stop/<job_id>')
+@api.route('/kairos/mct/stop/<job_id>')
 @api.doc()
 class Stop(Resource) :
     def put(self, job_id=job_id):
@@ -86,7 +86,7 @@ class Stop(Resource) :
 
         return result
   
-@api.route('/kairos/destroy/<job_id>')
+@api.route('/kairos/mct/destroy/<job_id>')
 @api.doc()
 class Destroy(Resource) :
     def put(self, job_id=job_id):
@@ -102,7 +102,7 @@ class Destroy(Resource) :
 
         return result
         
-@api.route('/kairos/status/<job_id>')
+@api.route('/kairos/mct/status/<job_id>')
 @api.doc()
 class GetStatus(Resource) :
     def get(self, job_id=job_id):
@@ -118,7 +118,7 @@ class GetStatus(Resource) :
 
         return result
 
-@api.route('/kairos/destroy/<job_id>')
+@api.route('/kairos/mct/destroy/<job_id>')
 @api.doc()
 class GetStatus(Resource) :
     def put(self, job_id=job_id):
@@ -134,7 +134,7 @@ class GetStatus(Resource) :
 
         return result
 
-@api.route('/kairos/visualinfo/<job_id>')
+@api.route('/kairos/mct/visualinfo/<job_id>')
 @api.doc()
 class GetVsiaulizeInfo(Resource) :
     def get(self, job_id=job_id):
@@ -154,7 +154,7 @@ class GetVsiaulizeInfo(Resource) :
 
         return result
 
-@api.route('/kairos/visualdata/<path:parameters>')
+@api.route('/kairos/mct/visualdata/<path:parameters>')
 #<int:job_id>/<string:type>/<int:start_frame>/<int:end_frame>')
 @api.doc()
 class GetVsiaulizeData(Resource) :
@@ -201,7 +201,7 @@ class GetVsiaulizeData(Resource) :
 
         return result
 
-@api.route('/kairos/get_version')
+@api.route('/kairos/mct/get_version')
 @api.doc()
 class GetVersion(Resource) :
     def get(self) :
