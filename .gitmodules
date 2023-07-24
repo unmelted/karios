@@ -1,3 +1,6 @@
 [submodule "pose_models/ViTPose"]
 	path = pose_models/ViTPose
 	url = https://github.com/ViTAE-Transformer/ViTPose.git
+[submodule "detect_models/ultralytics"]
+	path = detect_models/ultralytics
+	url = https://github.com/ultralytics/ultralytics.git
