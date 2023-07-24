@@ -149,11 +149,19 @@ class Commander(metaclass=Singleton) :
 			result, status, data = self.processor(category, job_id, task)
 			return result, status, data			
 
-		elif category > rc.TRACKER_READY :
+		elif category > rc.TRACKER_READY and category < rc.LOAD_POSE_MODEL:
 			# in this category, task is job_id
 			result, status = self.processor(category, job_id)
 			return result, status
 
+		elif category == rc.LOAD_POSE_MODEL :
+			pass
+
+		elif category == rc.ESTIMATE_POSE :
+			pass
+			
+		elif category == rc.DETECT_BALL :
+			pass
 
 		return result, status
 

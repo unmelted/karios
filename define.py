@@ -28,25 +28,16 @@ class Definition(object) :
 	base_index = 100
 	task_limit = 5	
 
+	## kairos - multichannel tracker
 	tracker_name = '/kronos'
 	tracker_port = 7890
 
 	backend_url = '10.82.5.119'
 	backend_port = 4000
 
-	exodus_ip = '10.82.5.130'
-	exodus_port = 9000
-	exodus_cmd = '/exodus/autocalib/'
-
-	shared_dir = '/mnt/images/' # local env only
-
 	visualize_data_limit = 100000
 	horizontal_grid = 50
 	vertical_grid = 28
-
-
-	def get_version():
-		return VERSION
 
 	def get_que_name(job_id) :
 		prefix = 'kairos_'		
@@ -55,6 +46,29 @@ class Definition(object) :
 	def get_table_name(job_id) :
 		prefix = 'kairos_'		
 		return prefix + str(job_id)	+ '_2d', prefix + str(job_id) + '_3d'
+
+	## kairos - mct end
+
+	## kairos 
+	pose_path = 'pose_models/ViTPose'
+	pose_config = os.path.join(pose_path, 'configs/body/2d_kpt_sview_rgb_img/associative_embedding/coco/hrnet_w32_coco_512x512.py')
+	pose_checkpoint = os.path.join( pose_path, 'mmpose/bottom_up/hrnet_w32_coco_512x512-bcb8c247_20200816.pth')
+	pose_nms_thr = 0.9
+	pose_dump = 'dump/'
+	pose_keypoint_thr = 0.3 #keypoint score threshold
+	pose_visualize_radius = 4
+	pose_visualuze_thick = 1
+
+
+	exodus_ip = '10.82.5.130'
+	exodus_port = 9000
+	exodus_cmd = '/exodus/autocalib/'
+	shared_dir = '/mnt/images/' # local env only
+
+
+	def get_version():
+		return VERSION
+
 
 def get_err_msg(err_code) :
 
