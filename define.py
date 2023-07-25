@@ -52,7 +52,7 @@ class Definition(object) :
 	## kairos 
 	pose_path = 'pose_models/ViTPose'
 	pose_config = os.path.join(pose_path, 'configs/body/2d_kpt_sview_rgb_img/associative_embedding/coco/hrnet_w32_coco_512x512.py')
-	pose_checkpoint = os.path.join( pose_path, 'mmpose/bottom_up/hrnet_w32_coco_512x512-bcb8c247_20200816.pth')
+	pose_checkpoint = os.path.join( pose_path, 'model/hrnet_w32_coco_512x512-bcb8c247_20200816.pth')
 	pose_nms_thr = 0.9
 	pose_dump = 'dump/'
 	pose_keypoint_thr = 0.3 #keypoint score threshold

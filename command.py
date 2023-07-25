@@ -14,6 +14,7 @@ from task import TaskActivity
 from db_manager import DbManager
 from define import RequestCategory as rc
 from tracker import TrackerGroup
+from pose import Pose
 from visualize import Visualize
 
 
@@ -69,6 +70,7 @@ class Commander(metaclass=Singleton) :
 	msg_q = Queue()
 	task_stock = {}
 	trck_q = TrackerStock()
+	
 
 	def start_commander(self) :
 		l.get().w.debug("Commander Start.")
@@ -155,7 +157,7 @@ class Commander(metaclass=Singleton) :
 			return result, status
 
 		elif category == rc.LOAD_POSE_MODEL :
-			pass
+			Pose()
 
 		elif category == rc.ESTIMATE_POSE :
 			pass
